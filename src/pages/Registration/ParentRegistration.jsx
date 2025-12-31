@@ -1,14 +1,18 @@
 import { useState } from 'react';
-import { ChildInfoSchema, DocumentsSchema, ParentInfoSchema } from '../../schemas/parent';
+import { ChildInfoSchema, DocumentsSchema, ParentInfoSchema } from '../../schemas/auth.schema';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { registerParent } from '@/services/auth';
+import { uploadToCloudinary } from '@/lib/cloudinary.js';
+import toast from 'react-hot-toast';
 
 
 
 const ParentRegistration = () => {
   const [currentStep, setCurrentStep] = useState(1);
+  const [loading , setLoading] = useState(false)
   const [formData, setFormData] = useState({
     full_name: '',
     email: '',
@@ -26,6 +30,7 @@ const ParentRegistration = () => {
     birth_certificate: null,
     medical_form: null,
   });
+
 
   const [errors, setErrors] = useState({});
 
@@ -52,6 +57,8 @@ const ParentRegistration = () => {
       gender: formData.child.gender,
     });
 
+
+    console.log(result.error)
     if (!result.success) {
       setErrors(result.error.flatten().fieldErrors);
       return 0;
@@ -60,13 +67,16 @@ const ParentRegistration = () => {
   }
 
   function validateStep3() {
-    const result = DocumentsSchema.safeParse(uploadedFiles);
+    const result = DocumentsSchema.safeParse(formData.documents);
+
     if (!result.success) {
       setErrors(result.error.flatten().fieldErrors);
+      console.log(result.error);
       return 0;
     }
     return 1;
   }
+
 
   const handleNext = () => {
     let isValid = false;
@@ -84,12 +94,26 @@ const ParentRegistration = () => {
     setErrors({});
   };
 
-  const handleFileUpload = (type, event) => {
+
+
+  const handleFileUpload = async (type, event) => {
     const file = event.target.files[0];
-    if (file) {
+    if (!file) return;
+
+    try {
+      setLoading(true);
+      toast.loading(`جار رفع ${type}...`, { id: type });
+
+      const result = await uploadToCloudinary(file);
+
+      const newDoc = {
+        document_type: type,
+        file_url: result.secure_url,
+        public_id: result.public_id,
+      };
+
       setUploadedFiles((prev) => ({ ...prev, [type]: file }));
-      const fakeUrl = `https://example.com/uploads/${file.name}`;
-      const newDoc = { document_type: type, file_url: fakeUrl };
+
       setFormData((prev) => ({
         ...prev,
         documents: [
@@ -97,8 +121,16 @@ const ParentRegistration = () => {
           newDoc,
         ],
       }));
+
+      toast.success(`${type} تم رفعه بنجاح ✅`, { id: type });
+    } catch {
+      toast.error(`فشل رفع ${type} ❌`, { id: type });
+    } finally {
+      setLoading(false);
     }
   };
+
+
 
   const handleRemoveFile = (type) => {
     setUploadedFiles((prev) => ({ ...prev, [type]: null }));
@@ -108,12 +140,35 @@ const ParentRegistration = () => {
     }));
   };
 
+
   const handleSubmit = () => {
-    if (validateStep3()) {
-      console.log('Form submitted:', formData);
-      alert('Registration successful! Check console for data.');
+    console.log("hihih")
+    if (!validateStep3()) {
+      toast.error('يرجى إكمال جميع الحقول المطلوبة قبل الإرسال');
+      return;
     }
+
+    registerParent(formData, {
+      onStart: setLoading,
+      onSuccess: () => {
+        toast.success('تم التسجيل بنجاح ✅');
+        console.log('Registration success');
+      },
+      onError: (error) => {
+        if (error.errors) {
+          setErrors(error.errors);
+          toast.error('يرجى تصحيح الحقول المشار إليها');
+          return;
+        }
+        toast.error(error.message);
+      },
+      onFinal: () => {
+        console.log('Request finished');
+      },
+    });
   };
+
+
 
   const updateFormData = (field, value) => {
     if (field.includes('.')) {
@@ -231,9 +286,9 @@ const ParentRegistration = () => {
                     updateFormData('child.full_name', e.target.value)
                   }
                 />
-                {errors.child?.full_name && (
+                {errors.full_name && (
                   <p className="text-xs text-red-500 mt-1">
-                    {errors.child.full_name}
+                    {errors.full_name}
                   </p>
                 )}
               </div>
@@ -253,9 +308,9 @@ const ParentRegistration = () => {
                       )
                     }
                   />
-                  {errors.child?.age && (
+                  {errors.age && (
                     <p className="text-xs text-red-500 mt-1">
-                      {errors.child.age}
+                      {errors.age}
                     </p>
                   )}
                 </div>
@@ -266,18 +321,18 @@ const ParentRegistration = () => {
                   </Label>
                   <select
                     value={formData.child.gender}
-                    onChange={(e) =>
-                      updateFormData('child.gender', e.target.value)
-                    }
+                    onChange={(e) => {
+                      updateFormData('child.gender', e.target.value);
+                    }}
                     className="w-full h-10 px-3 mt-1 rounded-md border border-gray-300"
                   >
                     <option value="">اختر</option>
                     <option value="male">ذكر</option>
                     <option value="female">أنثى</option>
                   </select>
-                  {errors.child?.gender && (
+                  {errors.gender && (
                     <p className="text-xs text-red-500 mt-1">
-                      {errors.child.gender}
+                      {errors.gender}
                     </p>
                   )}
                 </div>
@@ -290,13 +345,13 @@ const ParentRegistration = () => {
                 <Input
                   type="date"
                   value={formData.child.date_of_birth}
-                  onChange={(e) =>
-                    updateFormData('child.date_of_birth', e.target.value)
-                  }
+                  onChange={(e) => {
+                    updateFormData('child.date_of_birth', e.target.value);
+                  }}
                 />
-                {errors.child?.date_of_birth && (
+                {errors.date_of_birth && (
                   <p className="text-xs text-red-500 mt-1">
-                    {errors.child.date_of_birth}
+                    {errors.date_of_birth}
                   </p>
                 )}
               </div>
@@ -310,10 +365,34 @@ const ParentRegistration = () => {
                 الوثائق المطلوبة
               </h2>
 
-              <div>
+              {/* Birth Certificate */}
+              <div className="space-y-2">
                 <Label className="text-sm text-gray-600 font-normal">
                   شهادة الميلاد
                 </Label>
+
+                <input
+                  type="file"
+                  accept=".pdf,.jpg,.png"
+                  onChange={(e) => handleFileUpload('birth_certificate', e)}
+                  className="mt-1"
+                />
+
+                {uploadedFiles.birth_certificate && (
+                  <div className="flex items-center justify-between mt-1">
+                    <span className="text-sm text-gray-700">
+                      {uploadedFiles.birth_certificate.name}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveFile('birth_certificate')}
+                      className="text-red-500 text-sm"
+                    >
+                      إزالة
+                    </button>
+                  </div>
+                )}
+
                 {errors.birth_certificate && (
                   <p className="text-xs text-red-500 mt-1">
                     {errors.birth_certificate}
@@ -321,10 +400,34 @@ const ParentRegistration = () => {
                 )}
               </div>
 
-              <div>
+              {/* Medical Form */}
+              <div className="space-y-2">
                 <Label className="text-sm text-gray-600 font-normal">
                   الاستمارة الطبية
                 </Label>
+
+                <input
+                  type="file"
+                  accept=".pdf,.jpg,.png"
+                  onChange={(e) => handleFileUpload('medical_form', e)}
+                  className="mt-1"
+                />
+
+                {uploadedFiles.medical_form && (
+                  <div className="flex items-center justify-between mt-1">
+                    <span className="text-sm text-gray-700">
+                      {uploadedFiles.medical_form.name}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveFile('medical_form')}
+                      className="text-red-500 text-sm"
+                    >
+                      إزالة
+                    </button>
+                  </div>
+                )}
+
                 {errors.medical_form && (
                   <p className="text-xs text-red-500 mt-1">
                     {errors.medical_form}
@@ -344,7 +447,16 @@ const ParentRegistration = () => {
             {currentStep < 3 ? (
               <Button onClick={handleNext}>التالي</Button>
             ) : (
-              <Button onClick={handleSubmit}>إرسال</Button>
+              <Button onClick={handleSubmit} disabled={loading}>
+                {loading ? (
+                  <span className="flex items-center gap-2">
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    جاري الإرسال
+                  </span>
+                ) : (
+                  'إرسال'
+                )}
+              </Button>
             )}
           </div>
         </CardContent>

@@ -25,55 +25,203 @@ import AdminPayments from './pages/admin/AdminPayments';
 import AdminAnnouncements from './pages/admin/AdminAnnouncements';
 import AdminSettings from './pages/admin/AdminSettings';
 import ParentRegistration from './pages/Registration/ParentRegistration';
+import LoginPage from './pages/Registration/LoginPage';
+import { AuthProvider } from './context/auth.context';
+import RoleBasedRoute from './pages/Registration/RoleBasedRoute';
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<div>google</div>} />
-          <Route path="/register" element={<ParentRegistration />} />
-          {/* Parent Routes */}
-          <Route path="/parent" element={<Dashboard />} />
-          <Route path="/child-profile" element={<ChildProfile />} />
-          <Route path="/daily-reports" element={<DailyReports />} />
-          <Route path="/progress-reports" element={<ProgressReports />} />
-          <Route path="/attendance" element={<Attendance />} />
-          <Route path="/documents" element={<Documents />} />
-          <Route path="/payments" element={<Payments />} />
+    <AuthProvider>
+      <TooltipProvider>
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            {/* Public routes */}
+            <Route path="/" element={<div>google</div>} />
+            <Route path="/register" element={<ParentRegistration />} />
+            <Route path="/login" element={<LoginPage />} />
 
-          {/* 
-          
-          
-            <Route path="/teacher" element={<TeacherDashboard />} />
-            <Route path="/teacher/classroom" element={<TeacherClassroom />} />
-            <Route path="/teacher/daily-reports" element={<TeacherDailyReports />} />
-            <Route path="/teacher/attendance" element={<TeacherAttendance />} />
-            <Route path="/teacher/progress-reports" element={<TeacherProgressReports />} />
-            <Route path="/teacher/messages" element={<TeacherMessages />} />
-          
-          
-          */}
+            {/* Parent Routes */}
+            <Route
+              path="/parent"
+              element={
+                <RoleBasedRoute allowedRoles={['parent']}>
+                  <Dashboard />
+                </RoleBasedRoute>
+              }
+            />
+            <Route
+              path="/parent/child-profile"
+              element={
+                <RoleBasedRoute allowedRoles={['parent']}>
+                  <ChildProfile />
+                </RoleBasedRoute>
+              }
+            />
+            <Route
+              path="/parent/daily-reports"
+              element={
+                <RoleBasedRoute allowedRoles={['parent']}>
+                  <DailyReports />
+                </RoleBasedRoute>
+              }
+            />
+            <Route
+              path="/parent/progress-reports"
+              element={
+                <RoleBasedRoute allowedRoles={['parent']}>
+                  <ProgressReports />
+                </RoleBasedRoute>
+              }
+            />
+            <Route
+              path="/parent/attendance"
+              element={
+                <RoleBasedRoute allowedRoles={['parent']}>
+                  <Attendance />
+                </RoleBasedRoute>
+              }
+            />
+            <Route
+              path="/parent/documents"
+              element={
+                <RoleBasedRoute allowedRoles={['parent']}>
+                  <Documents />
+                </RoleBasedRoute>
+              }
+            />
+            <Route
+              path="/parent/payments"
+              element={
+                <RoleBasedRoute allowedRoles={['parent']}>
+                  <Payments />
+                </RoleBasedRoute>
+              }
+            />
 
-          {/* Admin Routes */}
-          <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/admin/users" element={<AdminUsers />} />
-          <Route path="/admin/teachers" element={<AdminTeachers />} />
-          <Route path="/admin/classrooms" element={<AdminClassrooms />} />
-          <Route path="/admin/reports" element={<AdminReports />} />
-          <Route path="/admin/payments" element={<AdminPayments />} />
-          <Route path="/admin/announcements" element={<AdminAnnouncements />} />
-          <Route path="/admin/settings" element={<AdminSettings />} />
+            {/*  
+            <Route
+              path="/teacher"
+              element={
+                <RoleBasedRoute allowedRoles={['teacher']}>
+                  <TeacherDashboard />
+                </RoleBasedRoute>
+              }
+            />
+            <Route
+              path="/teacher/classroom"
+              element={
+                <RoleBasedRoute allowedRoles={['teacher']}>
+                  <TeacherClassroom />
+                </RoleBasedRoute>
+              }
+            />
+            <Route
+              path="/teacher/daily-reports"
+              element={
+                <RoleBasedRoute allowedRoles={['teacher']}>
+                  <TeacherDailyReports />
+                </RoleBasedRoute>
+              }
+            />
+            <Route
+              path="/teacher/attendance"
+              element={
+                <RoleBasedRoute allowedRoles={['teacher']}>
+                  <TeacherAttendance />
+                </RoleBasedRoute>
+              }
+            />
+            <Route
+              path="/teacher/progress-reports"
+              element={
+                <RoleBasedRoute allowedRoles={['teacher']}>
+                  <TeacherProgressReports />
+                </RoleBasedRoute>
+              }
+            />
+            <Route
+              path="/teacher/messages"
+              element={
+                <RoleBasedRoute allowedRoles={['teacher']}>
+                  <TeacherMessages />
+                </RoleBasedRoute>
+              }
+            />
+            */}
+            {/* Admin Routes */}
+            <Route
+              path="/admin"
+              element={
+                <RoleBasedRoute allowedRoles={['admin']}>
+                  <AdminDashboard />
+                </RoleBasedRoute>
+              }
+            />
+            <Route
+              path="/admin/users"
+              element={
+                <RoleBasedRoute allowedRoles={['admin']}>
+                  <AdminUsers />
+                </RoleBasedRoute>
+              }
+            />
+            <Route
+              path="/admin/teachers"
+              element={
+                <RoleBasedRoute allowedRoles={['admin']}>
+                  <AdminTeachers />
+                </RoleBasedRoute>
+              }
+            />
+            <Route
+              path="/admin/classrooms"
+              element={
+                <RoleBasedRoute allowedRoles={['admin']}>
+                  <AdminClassrooms />
+                </RoleBasedRoute>
+              }
+            />
+            <Route
+              path="/admin/reports"
+              element={
+                <RoleBasedRoute allowedRoles={['admin']}>
+                  <AdminReports />
+                </RoleBasedRoute>
+              }
+            />
+            <Route
+              path="/admin/payments"
+              element={
+                <RoleBasedRoute allowedRoles={['admin']}>
+                  <AdminPayments />
+                </RoleBasedRoute>
+              }
+            />
+            <Route
+              path="/admin/announcements"
+              element={
+                <RoleBasedRoute allowedRoles={['admin']}>
+                  <AdminAnnouncements />
+                </RoleBasedRoute>
+              }
+            />
+            <Route
+              path="/admin/settings"
+              element={
+                <RoleBasedRoute allowedRoles={['admin']}>
+                  <AdminSettings />
+                </RoleBasedRoute>
+              }
+            />
 
-          {/* Public Website */}
-
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 

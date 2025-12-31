@@ -1,6 +1,11 @@
 class QueryHandler {
   constructor(baseUrl) {
     this.baseUrl = baseUrl;
+    this.authToken = null; 
+  }
+
+  setAuthToken(token) {
+    this.authToken = token;
   }
 
   async request(
@@ -11,9 +16,15 @@ class QueryHandler {
     if (onStart) onStart(true);
 
     try {
+      const headers = {
+        'Content-Type': 'application/json',
+        ...options.headers,
+      };
+      if (this.authToken) headers['Authorization'] = `Bearer ${this.authToken}`;
+
       const response = await fetch(`${this.baseUrl}${endpoint}`, {
         method: options.method || 'GET',
-        headers: { 'Content-Type': 'application/json', ...options.headers },
+        headers,
         ...options,
       });
 
@@ -31,5 +42,5 @@ class QueryHandler {
   }
 }
 
-const api = new QueryHandler('https://api.example.com');
+const api = new QueryHandler('http://localhost:5000');
 export default api;

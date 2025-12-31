@@ -17,6 +17,16 @@ export const ParentInfoSchema = z.object({
     .max(15, 'رقم الهاتف طويل جدًا'),
 });
 
+
+
+export const LoginSchema = z.object({
+  email: z.string().email('البريد الإلكتروني غير صحيح'),
+  password: z.string().min(6, 'كلمة المرور يجب أن تكون 6 أحرف على الأقل'),
+});
+
+
+
+
 export const ChildInfoSchema = z.object({
   full_name: z
     .string()
@@ -39,12 +49,12 @@ export const ChildInfoSchema = z.object({
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'صيغة تاريخ الميلاد غير صحيحة (YYYY-MM-DD)'),
 });
 
+
 export const DocumentsSchema = z.array(
   z.object({
     document_type: z.enum(['birth_certificate', 'medical_form'], {
       errorMap: () => ({ message: 'نوع الوثيقة غير صالح' }),
     }),
-
     file_url: z.string().url('رابط الملف غير صحيح'),
   }),
   {
@@ -52,6 +62,8 @@ export const DocumentsSchema = z.array(
     invalid_type_error: 'صيغة الوثائق غير صحيحة',
   }
 );
+
+
 
 export const ParentSignUpSchema = z.object({
   full_name: z
