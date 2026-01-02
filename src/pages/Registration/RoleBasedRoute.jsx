@@ -1,19 +1,24 @@
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom'; 
 import { useAuth } from '@/context/auth.context';
 
 const RoleBasedRoute = ({ children, allowedRoles = [] }) => {
   const { user, loading } = useAuth();
+  const location = useLocation(); 
 
-  // Show loader while auth is loading
   if (loading) return <div>Loading...</div>;
 
-  // If not logged in, redirect to login
   if (!user) return <Navigate to="/login" replace />;
 
-  // If user role is not allowed, redirect to home or unauthorized page
+  if (
+    user.role === 'parent' &&
+    user.status === 'APPROVED_AWAITING_PAYMENT' &&
+    location.pathname !== '/complete-payment'
+  ) {
+    return <Navigate to="/complete-payment" replace />;
+  }
+
   if (!allowedRoles.includes(user.role)) return <Navigate to="/" replace />;
 
-  // Otherwise, render the protected page
   return children;
 };
 

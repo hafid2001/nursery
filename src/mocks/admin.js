@@ -1,3 +1,5 @@
+import { Building2, DollarSign, FileBarChart, GraduationCap, TrendingUp, Users } from "lucide-react";
+
 export const announcements = [
   {
     id: 1,

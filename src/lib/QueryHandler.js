@@ -1,7 +1,7 @@
 class QueryHandler {
   constructor(baseUrl) {
     this.baseUrl = baseUrl;
-    this.authToken = null; 
+    this.authToken = null;
   }
 
   setAuthToken(token) {
@@ -20,6 +20,7 @@ class QueryHandler {
         'Content-Type': 'application/json',
         ...options.headers,
       };
+
       if (this.authToken) headers['Authorization'] = `Bearer ${this.authToken}`;
 
       const response = await fetch(`${this.baseUrl}${endpoint}`, {
@@ -29,9 +30,7 @@ class QueryHandler {
       });
 
       const data = await response.json();
-
       if (!response.ok) throw { status: response.status, ...data };
-
       if (onSuccess) onSuccess(data);
     } catch (error) {
       if (onError) onError(error);

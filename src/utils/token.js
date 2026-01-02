@@ -1,36 +1,18 @@
 const TOKEN_KEY = 'auth_token';
+const USER_KEY = 'auth_user'; // New key for user object
 
-/**
- * Get the saved token from localStorage
- */
-export const getToken = () => {
-  try {
-    return localStorage.getItem(TOKEN_KEY) || null;
-  } catch (error) {
-    console.error('Failed to get token:', error);
-    return null;
-  }
+export const getToken = () => localStorage.getItem(TOKEN_KEY) || null;
+export const setToken = (token) => localStorage.setItem(TOKEN_KEY, token);
+
+// Add these for User persistence
+export const getUser = () => {
+  const user = localStorage.getItem(USER_KEY);
+  return user ? JSON.parse(user) : null;
 };
+export const setUserLocal = (user) =>
+  localStorage.setItem(USER_KEY, JSON.stringify(user));
 
-/**
- * Save a token to localStorage
- * @param {string} token
- */
-export const setToken = (token) => {
-  try {
-    localStorage.setItem(TOKEN_KEY, token);
-  } catch (error) {
-    console.error('Failed to set token:', error);
-  }
-};
-
-/**
- * Clear the token from localStorage
- */
-export const clearToken = () => {
-  try {
-    localStorage.removeItem(TOKEN_KEY);
-  } catch (error) {
-    console.error('Failed to clear token:', error);
-  }
+export const clearAuth = () => {
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(USER_KEY);
 };

@@ -1,4 +1,4 @@
-import { getToken, setToken } from '@/utils/token';
+import { getToken, clearAuth } from '@/utils/token';
 import api from '../lib/QueryHandler';
 
 export const registerParent = async (
@@ -24,7 +24,7 @@ export const Login = async (
     {
       onStart,
       onSuccess: (data) => {
-        setToken(data.token);
+        api.setAuthToken(data.token); // <-- token now persists in localStorage
         if (onSuccess) onSuccess(data);
       },
       onError,
@@ -49,7 +49,7 @@ export const Logout = async ({ onStart, onSuccess, onError, onFinal } = {}) => {
     {
       onStart,
       onSuccess: (data) => {
-        clearToken();
+        clearAuth();
         if (onSuccess) onSuccess(data);
       },
       onError,

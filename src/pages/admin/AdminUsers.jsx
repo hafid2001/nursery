@@ -1,12 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import AdminLayout from '@/components/layout/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useToast } from '@/hooks/use-toast';
 import {
   Table,
   TableBody,
@@ -22,13 +20,17 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+  Search,
+  UserPlus,
+  MoreHorizontal,
+  Mail,
+  Phone,
+  Eye,
+  X,
+} from 'lucide-react';
+import { addParent, getParentList, approve } from '@/services/admin';
+import AddParentDialog from '@/components/AddParentDialog';
+import ViewParentDialog from '@/components/ViewParentDialog';
 import {
   Select,
   SelectContent,
@@ -36,161 +38,139 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import {
-  Search,
-  UserPlus,
-  MoreHorizontal,
-  Mail,
-  Phone,
-  Edit,
-  Trash2,
-  Eye,
-  X,
-} from 'lucide-react';
+import toast from 'react-hot-toast';
 
-const initialUsers = [
-  {
-    id: 1,
-    name: 'أحمد العتيبي',
-    email: 'ahmed.otaibi@email.com',
-    phone: '0501234567',
-    children: ['سارة العتيبي', 'محمد العتيبي'],
-    status: 'active',
-    joinDate: '15 يناير 2024',
-  },
-  {
-    id: 2,
-    name: 'فاطمة الشمري',
-    email: 'fatima.shamri@email.com',
-    phone: '0552345678',
-    children: ['نورة الشمري'],
-    status: 'active',
-    joinDate: '20 فبراير 2024',
-  },
-  {
-    id: 3,
-    name: 'خالد المالكي',
-    email: 'khaled.malki@email.com',
-    phone: '0563456789',
-    children: ['عمر المالكي', 'ليلى المالكي'],
-    status: 'inactive',
-    joinDate: '10 مارس 2024',
-  },
-  {
-    id: 4,
-    name: 'منى الحربي',
-    email: 'mona.harbi@email.com',
-    phone: '0574567890',
-    children: ['يوسف الحربي'],
-    status: 'active',
-    joinDate: '5 أبريل 2024',
-  },
-  {
-    id: 5,
-    name: 'سعود القحطاني',
-    email: 'saud.qahtani@email.com',
-    phone: '0585678901',
-    children: ['ريم القحطاني', 'فيصل القحطاني'],
-    status: 'pending',
-    joinDate: '1 مايو 2024',
-  },
-];
+// --- Helpers ---
+const getStatusLabel = (status) => {
+  const labels = {
+    PENDING_REVIEW: 'قيد المراجعة',
+    APPROVED_AWAITING_PAYMENT: 'بانتظار الدفع',
+    ACTIVE: 'نشط',
+    SUSPENDED: 'مرفوض',
+  };
+  return labels[status] || status;
+};
+
+const getStatusBadgeStyle = (status) => {
+  switch (status) {
+    case 'PENDING_REVIEW':
+      return 'bg-warning text-warning-foreground';
+    case 'APPROVED_AWAITING_PAYMENT':
+      return 'bg-info text-info-foreground';
+    case 'ACTIVE':
+      return 'bg-success text-success-foreground';
+    case 'SUSPENDED':
+      return 'bg-destructive text-destructive-foreground';
+    default:
+      return '';
+  }
+};
 
 const AdminUsers = () => {
-  const { toast } = useToast();
-  const [users, setUsers] = useState(initialUsers);
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isViewOpen, setIsViewOpen] = useState(false);
-  const [isEditOpen, setIsEditOpen] = useState(false);
-  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const [selectedUser, setSelectedUser] =
-    (useState < typeof initialUsers[0]) | (null > null);
+  const [selectedUser, setSelectedUser] = useState(null);
   const [formData, setFormData] = useState({
-    name: '',
+    full_name: '',
     email: '',
+    password: '',
     phone: '',
-    status: 'active',
+    child_full_name: '',
+    child_age: '',
+    child_gender: '',
+    child_date_of_birth: '',
+    documents: [],
+    status: 'PENDING_REVIEW',
   });
 
-  const filteredUsers = users.filter((user) => {
-    const matchesSearch =
-      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.phone.includes(searchQuery);
-    const matchesStatus =
-      statusFilter === 'all' || user.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  const loadData = useCallback(
+    async (targetPage, shouldAppend) => {
+      setLoading(true);
 
-  const handleAddParent = () => {
-    const newUser = {
-      id: users.length + 1,
-      name: formData.name,
-      email: formData.email,
-      phone: formData.phone,
-      children: [],
-      status: formData.status,
-      joinDate: new Date().toLocaleDateString('ar-SA', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-      }),
-    };
-    setUsers([...users, newUser]);
-    toast({
-      title: 'تمت إضافة ولي الأمر',
-      description: `تمت إضافة ${formData.name} بنجاح.`,
-    });
-    setIsAddOpen(false);
-    setFormData({ name: '', email: '', phone: '', status: 'active' });
+      getParentList(statusFilter, targetPage, {
+        onSuccess: (response) => {
+          const newData = response.data || [];
+
+          if (shouldAppend) {
+            setUsers((prev) => [...prev, ...newData]);
+          } else {
+            setUsers(newData);
+          }
+          setHasMore(newData.length > 0);
+        },
+        onError: () => {
+          setUsers([]);
+          toast.error('فشل في تحميل قائمة أولياء الأمور');
+        },
+        onFinal: () => setLoading(false),
+      });
+    },
+    [statusFilter, toast]
+  );
+
+  useEffect(() => {
+    setPage(1);
+    loadData(1, false);
+  }, [statusFilter, loadData]);
+
+  useEffect(() => {
+    if (page > 1) {
+      loadData(page, true);
+    }
+  }, [page, loadData]);
+
+  // --- Handlers ---
+  const handleLoadMore = () => {
+    if (!loading && hasMore) {
+      setPage((prev) => prev + 1);
+    }
   };
 
-  const handleEditParent = () => {
-    if (!selectedUser) return;
-    setUsers(
-      users.map((u) => (u.id === selectedUser.id ? { ...u, ...formData } : u))
-    );
-    toast({
-      title: 'تم تحديث البيانات',
-      description: `تم تحديث بيانات ${formData.name}.`,
-    });
-    setIsEditOpen(false);
-    setSelectedUser(null);
-  };
-
-  const handleDeleteParent = () => {
-    if (!selectedUser) return;
-    setUsers(users.filter((u) => u.id !== selectedUser.id));
-    toast({
-      title: 'تم الحذف',
-      description: `تم حذف ${selectedUser.name}.`,
-      variant: 'destructive',
-    });
-    setIsDeleteOpen(false);
-    setSelectedUser(null);
-  };
-
-  const openEdit = (user) => {
-    setSelectedUser(user);
-    setFormData({
-      name: user.name,
-      email: user.email,
-      phone: user.phone,
-      status: user.status,
-    });
-    setIsEditOpen(true);
+  const handleStatusChange = (userId, newStatus) => {
+    switch (newStatus) {
+      case 'APPROVED':
+        approve(userId, {
+          onSuccess: () => {
+            setUsers((prev) =>
+              prev.map((u) =>
+                u.id === userId
+                  ? { ...u, status: 'APPROVED_AWAITING_PAYMENT' }
+                  : u
+              )
+            );
+            toast.success('تم تغيير حالة المستخدم بنجاح');
+          },
+          onError: () => {
+            toast.error('فشل في تغيير حالة المستخدم');
+          },
+        });
+        break;
+      case 'REJECTED':
+        reject(userId, {
+          onSuccess: () => {
+            setUsers((prev) =>
+              prev.map((u) =>
+                u.id === userId ? { ...u, status: 'SUSPENDED' } : u
+              )
+            );
+            toast.success('تم تغيير حالة المستخدم بنجاح');
+          },
+          onError: () => {
+            toast.error('فشل في تغيير حالة المستخدم');
+          },
+        });
+        break;
+      default:
+        break;
+    }
   };
 
   const openView = (user) => {
@@ -198,23 +178,44 @@ const AdminUsers = () => {
     setIsViewOpen(true);
   };
 
-  const openDelete = (user) => {
-    setSelectedUser(user);
-    setIsDeleteOpen(true);
+  const handleAddParent = async (formData) => {
+    const newUser = {
+      id: users.length + 1,
+      full_name: formData.full_name,
+      email: formData.email,
+      phone: formData.phone,
+      child: [
+        {
+          full_name: formData.child_full_name,
+          age: formData.child_age,
+          gender: formData.child_gender,
+          date_of_birth: formData.child_date_of_birth,
+          documents: formData.documents || [],
+        },
+      ],
+    };
+
+    addParent(newUser, {
+      onStart: setLoading,
+      onSuccess: () => {
+        setUsers([...users, newUser]);
+        toast.success('تمت إضافة ولي الأمر');
+      },
+      onError: () => {
+        toast.error('فشل إضافة ولي الأم');
+      },
+    });
   };
 
-  const getStatusLabel = (status) => {
-    switch (status) {
-      case 'active':
-        return 'نشط';
-      case 'inactive':
-        return 'غير نشط';
-      case 'pending':
-        return 'قيد الانتظار';
-      default:
-        return status;
-    }
-  };
+  // Client-side Filter for Search
+  const filteredUsers = users.filter((u) => {
+    const term = searchQuery.toLowerCase();
+    return (
+      u.full_name?.toLowerCase().includes(term) ||
+      u.email?.toLowerCase().includes(term) ||
+      u.phone?.includes(term)
+    );
+  });
 
   return (
     <AdminLayout>
@@ -233,8 +234,7 @@ const AdminUsers = () => {
             className="gap-2 bg-admin hover:bg-admin/90 text-admin-foreground"
             onClick={() => setIsAddOpen(true)}
           >
-            <UserPlus className="w-4 h-4" />
-            إضافة ولي أمر
+            <UserPlus className="w-4 h-4" /> إضافة ولي أمر
           </Button>
         </div>
 
@@ -243,7 +243,7 @@ const AdminUsers = () => {
           <CardContent className="pt-6">
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="relative flex-1">
-                <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   placeholder="البحث بالاسم أو البريد أو الهاتف..."
                   className="pr-10"
@@ -252,28 +252,19 @@ const AdminUsers = () => {
                 />
               </div>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[150px]">
+                <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="الحالة" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">جميع الحالات</SelectItem>
-                  <SelectItem value="active">نشط</SelectItem>
-                  <SelectItem value="inactive">غير نشط</SelectItem>
-                  <SelectItem value="pending">قيد الانتظار</SelectItem>
+                  <SelectItem value="PENDING_REVIEW">قيد المراجعة</SelectItem>
+                  <SelectItem value="APPROVED_AWAITING_PAYMENT">
+                    بانتظار الدفع
+                  </SelectItem>
+                  <SelectItem value="ACTIVE">نشط</SelectItem>
+                  <SelectItem value="SUSPENDED">مرفوض</SelectItem>
                 </SelectContent>
               </Select>
-              {(searchQuery || statusFilter !== 'all') && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => {
-                    setSearchQuery('');
-                    setStatusFilter('all');
-                  }}
-                >
-                  <X className="w-4 h-4" />
-                </Button>
-              )}
             </div>
           </CardContent>
         </Card>
@@ -289,7 +280,7 @@ const AdminUsers = () => {
                 <TableRow>
                   <TableHead>ولي الأمر</TableHead>
                   <TableHead>التواصل</TableHead>
-                  <TableHead>الأبناء</TableHead>
+                  <TableHead>الطفل</TableHead>
                   <TableHead>الحالة</TableHead>
                   <TableHead>تاريخ الانضمام</TableHead>
                   <TableHead className="text-left">الإجراءات</TableHead>
@@ -301,345 +292,125 @@ const AdminUsers = () => {
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <Avatar className="h-10 w-10">
-                          <AvatarImage src="/placeholder.svg" />
                           <AvatarFallback className="bg-admin-accent text-admin-accent-foreground">
-                            {user.name
-                              .split(' ')
-                              .map((n) => n[0])
-                              .join('')}
+                            {user.full_name?.charAt(0)}
                           </AvatarFallback>
                         </Avatar>
-                        <span className="font-medium">{user.name}</span>
+                        <span className="font-medium">{user.full_name}</span>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2 text-sm">
-                          <Mail className="w-3 h-3 text-muted-foreground" />
-                          {user.email}
+                      <div className="text-sm space-y-1">
+                        <div className="flex items-center gap-2">
+                          <Mail className="w-3 h-3" /> {user.email}
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Phone className="w-3 h-3" />
-                          {user.phone}
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <Phone className="w-3 h-3" /> {user.phone}
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="flex flex-wrap gap-1">
-                        {user.children.map((child) => (
-                          <Badge
-                            key={child}
-                            variant="secondary"
-                            className="text-xs"
-                          >
-                            {child}
-                          </Badge>
-                        ))}
-                        {user.children.length === 0 && (
-                          <span className="text-muted-foreground text-sm">
-                            لا يوجد أبناء
-                          </span>
+                      <div className="text-sm">
+                        <div className="font-medium">
+                          {user.children?.length || 0} طفل
+                        </div>
+                        {user.children && user.children.length > 0 && (
+                          <div className="text-xs text-muted-foreground mt-1">
+                            {user.children
+                              .map((child) => child.full_name)
+                              .join(', ')}
+                          </div>
                         )}
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge
-                        variant={
-                          user.status === 'active'
-                            ? 'default'
-                            : user.status === 'pending'
-                              ? 'secondary'
-                              : 'destructive'
-                        }
-                        className={
-                          user.status === 'active'
-                            ? 'bg-success'
-                            : user.status === 'pending'
-                              ? 'bg-warning text-warning-foreground'
-                              : ''
-                        }
-                      >
-                        {getStatusLabel(user.status)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {user.joinDate}
-                    </TableCell>
-                    <TableCell className="text-left">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreHorizontal className="w-4 h-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => openView(user)}>
-                            <Eye className="w-4 h-4 ml-2" />
-                            عرض التفاصيل
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => openEdit(user)}>
-                            <Edit className="w-4 h-4 ml-2" />
-                            تعديل
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="text-destructive"
-                            onClick={() => openDelete(user)}
+                          <Badge
+                            className={`${getStatusBadgeStyle(user.status)} cursor-pointer`}
                           >
-                            <Trash2 className="w-4 h-4 ml-2" />
-                            حذف
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
+                            {getStatusLabel(user.status)}
+                          </Badge>
+                        </DropdownMenuTrigger>
+                        {user.status === 'PENDING_REVIEW' && (
+                          <DropdownMenuContent>
+                            <DropdownMenuItem
+                              onClick={() =>{
+                                handleStatusChange(user.parent_id, 'APPROVED')
+                              }
+                              }
+                            >
+                              موافقة
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() =>
+                                handleStatusChange(user.parent_id, 'REJECTED')
+                              }
+                              className="text-destructive"
+                            >
+                              رفض
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        )}
                       </DropdownMenu>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground text-sm">
+                      {user.created_at
+                        ? new Date(user.created_at).toLocaleDateString('ar', {
+                            numberingSystem: 'latn',
+                          })
+                        : '-'}
+                    </TableCell>
+                    <TableCell className="text-left">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => openView(user)}
+                      >
+                        <Eye className="w-4 h-4" />
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
+
+            {!loading && filteredUsers.length === 0 && (
+              <div className="py-10 text-center text-muted-foreground">
+                لا يوجد نتائج.
+              </div>
+            )}
           </CardContent>
         </Card>
+
+        {/* Load More */}
+        {hasMore && (
+          <div className="flex justify-center pb-10">
+            <Button
+              onClick={handleLoadMore}
+              disabled={loading}
+              variant="outline"
+              className="w-32"
+            >
+              {loading ? 'جاري التحميل...' : 'تحميل المزيد'}
+            </Button>
+          </div>
+        )}
       </div>
 
-      {/* Add Parent Dialog */}
-      <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>إضافة ولي أمر جديد</DialogTitle>
-            <DialogDescription>أدخل بيانات ولي الأمر.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">الاسم الكامل</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">البريد الإلكتروني</Label>
-              <Input
-                id="email"
-                type="email"
-                value={formData.email}
-                onChange={(e) =>
-                  setFormData({ ...formData, email: e.target.value })
-                }
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="phone">رقم الهاتف</Label>
-              <Input
-                id="phone"
-                value={formData.phone}
-                onChange={(e) =>
-                  setFormData({ ...formData, phone: e.target.value })
-                }
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>الحالة</Label>
-              <Select
-                value={formData.status}
-                onValueChange={(v) => setFormData({ ...formData, status: v })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="active">نشط</SelectItem>
-                  <SelectItem value="pending">قيد الانتظار</SelectItem>
-                  <SelectItem value="inactive">غير نشط</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddOpen(false)}>
-              إلغاء
-            </Button>
-            <Button
-              className="bg-admin hover:bg-admin/90"
-              onClick={handleAddParent}
-            >
-              إضافة
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* View Parent Dialog */}
-      <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>تفاصيل ولي الأمر</DialogTitle>
-          </DialogHeader>
-          {selectedUser && (
-            <div className="space-y-4 py-4">
-              <div className="flex items-center gap-4">
-                <Avatar className="h-16 w-16">
-                  <AvatarFallback className="bg-admin-accent text-admin-accent-foreground text-lg">
-                    {selectedUser.name
-                      .split(' ')
-                      .map((n) => n[0])
-                      .join('')}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <h3 className="font-semibold text-lg">{selectedUser.name}</h3>
-                  <Badge
-                    className={
-                      selectedUser.status === 'active'
-                        ? 'bg-success'
-                        : selectedUser.status === 'pending'
-                          ? 'bg-warning'
-                          : ''
-                    }
-                  >
-                    {getStatusLabel(selectedUser.status)}
-                  </Badge>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <Mail className="w-4 h-4 text-muted-foreground" />
-                  {selectedUser.email}
-                </div>
-                <div className="flex items-center gap-2">
-                  <Phone className="w-4 h-4 text-muted-foreground" />
-                  {selectedUser.phone}
-                </div>
-              </div>
-              <div>
-                <Label className="text-muted-foreground">الأبناء</Label>
-                <div className="flex flex-wrap gap-2 mt-1">
-                  {selectedUser.children.map((child) => (
-                    <Badge key={child} variant="secondary">
-                      {child}
-                    </Badge>
-                  ))}
-                  {selectedUser.children.length === 0 && (
-                    <span className="text-muted-foreground">
-                      لا يوجد أبناء مسجلين
-                    </span>
-                  )}
-                </div>
-              </div>
-              <div>
-                <Label className="text-muted-foreground">تاريخ الانضمام</Label>
-                <p>{selectedUser.joinDate}</p>
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsViewOpen(false)}>
-              إغلاق
-            </Button>
-            <Button
-              className="bg-admin hover:bg-admin/90"
-              onClick={() => {
-                setIsViewOpen(false);
-                if (selectedUser) openEdit(selectedUser);
-              }}
-            >
-              تعديل
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit Parent Dialog */}
-      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>تعديل بيانات ولي الأمر</DialogTitle>
-            <DialogDescription>تحديث بيانات ولي الأمر.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="editName">الاسم الكامل</Label>
-              <Input
-                id="editName"
-                value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="editEmail">البريد الإلكتروني</Label>
-              <Input
-                id="editEmail"
-                type="email"
-                value={formData.email}
-                onChange={(e) =>
-                  setFormData({ ...formData, email: e.target.value })
-                }
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="editPhone">رقم الهاتف</Label>
-              <Input
-                id="editPhone"
-                value={formData.phone}
-                onChange={(e) =>
-                  setFormData({ ...formData, phone: e.target.value })
-                }
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>الحالة</Label>
-              <Select
-                value={formData.status}
-                onValueChange={(v) => setFormData({ ...formData, status: v })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="active">نشط</SelectItem>
-                  <SelectItem value="pending">قيد الانتظار</SelectItem>
-                  <SelectItem value="inactive">غير نشط</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditOpen(false)}>
-              إلغاء
-            </Button>
-            <Button
-              className="bg-admin hover:bg-admin/90"
-              onClick={handleEditParent}
-            >
-              حفظ التغييرات
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
-            <AlertDialogDescription>
-              سيتم حذف {selectedUser?.name} نهائياً. لا يمكن التراجع عن هذا
-              الإجراء.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>إلغاء</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive hover:bg-destructive/90"
-              onClick={handleDeleteParent}
-            >
-              حذف
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Dialogs */}
+      <AddParentDialog
+        open={isAddOpen}
+        onOpenChange={setIsAddOpen}
+        onAddParent={handleAddParent}
+        formData={formData}
+        setFormData={setFormData}
+      />
+      <ViewParentDialog
+        open={isViewOpen}
+        onOpenChange={setIsViewOpen}
+        user={selectedUser}
+      />
     </AdminLayout>
   );
 };

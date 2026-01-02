@@ -28,6 +28,9 @@ import ParentRegistration from './pages/Registration/ParentRegistration';
 import LoginPage from './pages/Registration/LoginPage';
 import { AuthProvider } from './context/auth.context';
 import RoleBasedRoute from './pages/Registration/RoleBasedRoute';
+import { Toaster } from 'react-hot-toast';
+import CompletePayment from './pages/Registration/CheckOut';
+import PaymentSuccessGuard from './pages/Registration/PaymentSuccessGuard';
 
 const queryClient = new QueryClient();
 
@@ -35,7 +38,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <TooltipProvider>
-        <Sonner />
+        <Toaster />
         <BrowserRouter>
           <Routes>
             {/* Public routes */}
@@ -214,6 +217,23 @@ const App = () => (
                 <RoleBasedRoute allowedRoles={['admin']}>
                   <AdminSettings />
                 </RoleBasedRoute>
+              }
+            />
+            <Route
+              path="/complete-payment"
+              element={
+                <RoleBasedRoute allowedRoles={['parent']}>
+                  <CompletePayment />
+                </RoleBasedRoute>
+              }
+            />
+
+            <Route
+              path="/payment/success"
+              element={
+                <PaymentSuccessGuard>
+                  <PaymentSuccess />
+                </PaymentSuccessGuard>
               }
             />
 

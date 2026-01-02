@@ -36,16 +36,117 @@ import {
   FileText,
 } from 'lucide-react';
 
+const stats = [
+  {
+    title: 'إجمالي الطلاب',
+    value: '156',
+    change: '+12%',
+    trend: 'up',
+    icon: Users,
+    color: 'bg-admin',
+  },
+  {
+    title: 'المعلمات النشطات',
+    value: '24',
+    change: '+2',
+    trend: 'up',
+    icon: GraduationCap,
+    color: 'bg-success',
+  },
+  {
+    title: 'الفصول',
+    value: '8',
+    change: '0',
+    trend: 'neutral',
+    icon: Building2,
+    color: 'bg-warning',
+  },
+  {
+    title: 'الإيرادات الشهرية',
+    value: '48,250 ر.س',
+    change: '+8.5%',
+    trend: 'up',
+    icon: DollarSign,
+    color: 'bg-info',
+  },
+];
+
+const recentActivities = [
+  {
+    id: 1,
+    action: 'تسجيل طالب جديد',
+    name: 'أحمد محمد',
+    time: 'منذ 10 دقائق',
+    type: 'enrollment',
+  },
+  {
+    id: 2,
+    action: 'استلام دفعة',
+    name: 'عائلة العتيبي',
+    time: 'منذ ساعة',
+    type: 'payment',
+  },
+  {
+    id: 3,
+    action: 'إضافة معلمة',
+    name: 'أ. نورة الشمري',
+    time: 'منذ ساعتين',
+    type: 'staff',
+  },
+  {
+    id: 4,
+    action: 'تقرير الحضور',
+    name: 'فصل الشمس',
+    time: 'منذ 3 ساعات',
+    type: 'report',
+  },
+  {
+    id: 5,
+    action: 'رسالة ولي أمر',
+    name: 'محمد العلي',
+    time: 'منذ 4 ساعات',
+    type: 'message',
+  },
+];
+
+const pendingActions = [
+  {
+    id: 1,
+    title: '5 طلبات تسجيل قيد الانتظار',
+    priority: 'high',
+    route: '/admin/users',
+  },
+  {
+    id: 2,
+    title: '3 مدفوعات متأخرة',
+    priority: 'high',
+    route: '/admin/payments',
+  },
+  {
+    id: 3,
+    title: 'تعارض في جدول المعلمات',
+    priority: 'medium',
+    route: '/admin/teachers',
+  },
+  {
+    id: 4,
+    title: 'تحديث السجلات الصحية (طالبان)',
+    priority: 'low',
+    route: '/admin/users',
+  },
+];
+
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [isAddStudentOpen, setIsAddStudentOpen] = useState(false);
+  const [isAddParentOpen, setIsAddParentOpen] = useState(false);
   const [isScheduleEventOpen, setIsScheduleEventOpen] = useState(false);
-  const [studentForm, setStudentForm] = useState({
-    firstName: '',
-    lastName: '',
-    classroom: '',
-    parentEmail: '',
+  const [parentForm, setParentForm] = useState({
+    parentName: '',
+    email: '',
+    phone: '',
+    childName: '',
+    childAge: '',
   });
   const [eventForm, setEventForm] = useState({
     title: '',
@@ -61,17 +162,18 @@ const AdminDashboard = () => {
     });
   };
 
-  const handleAddStudent = () => {
+  const handleAddParent = () => {
     toast({
-      title: 'تمت إضافة الطالب',
-      description: `تم تسجيل ${studentForm.firstName} ${studentForm.lastName} بنجاح.`,
+      title: 'تمت إضافة ولي الأمر',
+      description: `تم تسجيل ${parentForm.parentName} مع الطفل ${parentForm.childName} بنجاح.`,
     });
-    setIsAddStudentOpen(false);
-    setStudentForm({
-      firstName: '',
-      lastName: '',
-      classroom: '',
-      parentEmail: '',
+    setIsAddParentOpen(false);
+    setParentForm({
+      parentName: '',
+      email: '',
+      phone: '',
+      childName: '',
+      childAge: '',
     });
   };
 
@@ -108,10 +210,10 @@ const AdminDashboard = () => {
             </Button>
             <Button
               className="gap-2 bg-admin hover:bg-admin/90 text-admin-foreground"
-              onClick={() => setIsAddStudentOpen(true)}
+              onClick={() => setIsAddParentOpen(true)}
             >
               <UserPlus className="w-4 h-4" />
-              <span className="hidden sm:inline">إضافة طالب</span>
+              <span className="hidden sm:inline">إضافة ولي أمر</span>
             </Button>
           </div>
         </div>
@@ -274,10 +376,10 @@ const AdminDashboard = () => {
               <Button
                 variant="outline"
                 className="h-auto py-4 flex flex-col gap-2 hover:border-admin hover:bg-admin/5"
-                onClick={() => setIsAddStudentOpen(true)}
+                onClick={() => setIsAddParentOpen(true)}
               >
                 <UserPlus className="w-6 h-6 text-admin" />
-                <span className="text-sm">إضافة طالب</span>
+                <span className="text-sm">إضافة ولي أمر</span>
               </Button>
               <Button
                 variant="outline"
@@ -308,85 +410,106 @@ const AdminDashboard = () => {
         </Card>
       </div>
 
-      {/* Add Student Dialog */}
-      <Dialog open={isAddStudentOpen} onOpenChange={setIsAddStudentOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+      {/* Add Parent with Child Dialog */}
+      <Dialog open={isAddParentOpen} onOpenChange={setIsAddParentOpen}>
+        <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>إضافة طالب جديد</DialogTitle>
-            <DialogDescription>أدخل معلومات الطالب لتسجيله.</DialogDescription>
+            <DialogTitle>إضافة ولي أمر مع طفل</DialogTitle>
+            <DialogDescription>
+              أدخل معلومات ولي الأمر والطفل لتسجيلهم.
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="firstName">الاسم الأول</Label>
-                <Input
-                  id="firstName"
-                  value={studentForm.firstName}
-                  onChange={(e) =>
-                    setStudentForm({
-                      ...studentForm,
-                      firstName: e.target.value,
-                    })
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="lastName">اسم العائلة</Label>
-                <Input
-                  id="lastName"
-                  value={studentForm.lastName}
-                  onChange={(e) =>
-                    setStudentForm({ ...studentForm, lastName: e.target.value })
-                  }
-                />
+            <div className="border-b pb-3 mb-3">
+              <h4 className="font-semibold mb-3 text-admin">
+                بيانات ولي الأمر
+              </h4>
+              <div className="space-y-3">
+                <div className="space-y-2">
+                  <Label htmlFor="parentName">الاسم الكامل</Label>
+                  <Input
+                    id="parentName"
+                    value={parentForm.parentName}
+                    onChange={(e) =>
+                      setParentForm({
+                        ...parentForm,
+                        parentName: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email">البريد الإلكتروني</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={parentForm.email}
+                    onChange={(e) =>
+                      setParentForm({ ...parentForm, email: e.target.value })
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="phone">رقم الهاتف</Label>
+                  <Input
+                    id="phone"
+                    value={parentForm.phone}
+                    onChange={(e) =>
+                      setParentForm({ ...parentForm, phone: e.target.value })
+                    }
+                  />
+                </div>
               </div>
             </div>
-            <div className="space-y-2">
-              <Label>الفصل</Label>
-              <Select
-                value={studentForm.classroom}
-                onValueChange={(v) =>
-                  setStudentForm({ ...studentForm, classroom: v })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="اختر الفصل" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="sunshine">فصل الشمس</SelectItem>
-                  <SelectItem value="rainbow">فصل قوس قزح</SelectItem>
-                  <SelectItem value="starlight">فصل النجوم</SelectItem>
-                  <SelectItem value="moonbeam">فصل القمر</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="parentEmail">بريد ولي الأمر</Label>
-              <Input
-                id="parentEmail"
-                type="email"
-                value={studentForm.parentEmail}
-                onChange={(e) =>
-                  setStudentForm({
-                    ...studentForm,
-                    parentEmail: e.target.value,
-                  })
-                }
-              />
+            <div>
+              <h4 className="font-semibold mb-3 text-admin">بيانات الطفل</h4>
+              <div className="space-y-3">
+                <div className="space-y-2">
+                  <Label htmlFor="childName">اسم الطفل</Label>
+                  <Input
+                    id="childName"
+                    value={parentForm.childName}
+                    onChange={(e) =>
+                      setParentForm({
+                        ...parentForm,
+                        childName: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>العمر</Label>
+                  <Select
+                    value={parentForm.childAge}
+                    onValueChange={(v) =>
+                      setParentForm({ ...parentForm, childAge: v })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="اختر العمر" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="سنة واحدة">سنة واحدة</SelectItem>
+                      <SelectItem value="سنتان">سنتان</SelectItem>
+                      <SelectItem value="3 سنوات">3 سنوات</SelectItem>
+                      <SelectItem value="4 سنوات">4 سنوات</SelectItem>
+                      <SelectItem value="5 سنوات">5 سنوات</SelectItem>
+                      <SelectItem value="6 سنوات">6 سنوات</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </div>
           </div>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsAddStudentOpen(false)}
-            >
+            <Button variant="outline" onClick={() => setIsAddParentOpen(false)}>
               إلغاء
             </Button>
             <Button
               className="bg-admin hover:bg-admin/90"
-              onClick={handleAddStudent}
+              onClick={handleAddParent}
             >
-              إضافة الطالب
+              إضافة
             </Button>
           </DialogFooter>
         </DialogContent>
