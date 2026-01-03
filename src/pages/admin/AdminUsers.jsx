@@ -29,8 +29,8 @@ import {
   X,
 } from 'lucide-react';
 import { addParent, getParentList, approve } from '@/services/admin';
-import AddParentDialog from '@/components/AddParentDialog';
-import ViewParentDialog from '@/components/ViewParentDialog';
+import AddParentDialog from '@/components/parent/AddParentDialog';
+import ViewParentDialog from '@/components/parent/ViewParentDialog';
 import {
   Select,
   SelectContent,

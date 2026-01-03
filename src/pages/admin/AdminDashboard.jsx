@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
   DialogContent,
@@ -34,107 +34,10 @@ import {
   Bell,
   Calendar,
   FileText,
-} from 'lucide-react';
-
-const stats = [
-  {
-    title: 'إجمالي الطلاب',
-    value: '156',
-    change: '+12%',
-    trend: 'up',
-    icon: Users,
-    color: 'bg-admin',
-  },
-  {
-    title: 'المعلمات النشطات',
-    value: '24',
-    change: '+2',
-    trend: 'up',
-    icon: GraduationCap,
-    color: 'bg-success',
-  },
-  {
-    title: 'الفصول',
-    value: '8',
-    change: '0',
-    trend: 'neutral',
-    icon: Building2,
-    color: 'bg-warning',
-  },
-  {
-    title: 'الإيرادات الشهرية',
-    value: '48,250 ر.س',
-    change: '+8.5%',
-    trend: 'up',
-    icon: DollarSign,
-    color: 'bg-info',
-  },
-];
-
-const recentActivities = [
-  {
-    id: 1,
-    action: 'تسجيل طالب جديد',
-    name: 'أحمد محمد',
-    time: 'منذ 10 دقائق',
-    type: 'enrollment',
-  },
-  {
-    id: 2,
-    action: 'استلام دفعة',
-    name: 'عائلة العتيبي',
-    time: 'منذ ساعة',
-    type: 'payment',
-  },
-  {
-    id: 3,
-    action: 'إضافة معلمة',
-    name: 'أ. نورة الشمري',
-    time: 'منذ ساعتين',
-    type: 'staff',
-  },
-  {
-    id: 4,
-    action: 'تقرير الحضور',
-    name: 'فصل الشمس',
-    time: 'منذ 3 ساعات',
-    type: 'report',
-  },
-  {
-    id: 5,
-    action: 'رسالة ولي أمر',
-    name: 'محمد العلي',
-    time: 'منذ 4 ساعات',
-    type: 'message',
-  },
-];
-
-const pendingActions = [
-  {
-    id: 1,
-    title: '5 طلبات تسجيل قيد الانتظار',
-    priority: 'high',
-    route: '/admin/users',
-  },
-  {
-    id: 2,
-    title: '3 مدفوعات متأخرة',
-    priority: 'high',
-    route: '/admin/payments',
-  },
-  {
-    id: 3,
-    title: 'تعارض في جدول المعلمات',
-    priority: 'medium',
-    route: '/admin/teachers',
-  },
-  {
-    id: 4,
-    title: 'تحديث السجلات الصحية (طالبان)',
-    priority: 'low',
-    route: '/admin/users',
-  },
-];
+} from "lucide-react";
+import DashboardStats from '@/components/dashboard/DashboardStats';
+import RecentActivities from '@/components/dashboard/RecentActivities';
+import PendingActions from '@/components/dashboard/PendingActions';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -157,14 +60,14 @@ const AdminDashboard = () => {
 
   const handleGenerateReport = () => {
     toast({
-      title: 'تم إنشاء التقرير',
-      description: 'تقريرك جاهز للتحميل.',
+      title: "تم إنشاء التقرير",
+      description: "تقريرك جاهز للتحميل.",
     });
   };
 
   const handleAddParent = () => {
     toast({
-      title: 'تمت إضافة ولي الأمر',
+      title: "تمت إضافة ولي الأمر",
       description: `تم تسجيل ${parentForm.parentName} مع الطفل ${parentForm.childName} بنجاح.`,
     });
     setIsAddParentOpen(false);
@@ -179,7 +82,7 @@ const AdminDashboard = () => {
 
   const handleScheduleEvent = () => {
     toast({
-      title: 'تمت جدولة الفعالية',
+      title: "تمت جدولة الفعالية",
       description: `تمت جدولة "${eventForm.title}" في ${eventForm.date}.`,
     });
     setIsScheduleEventOpen(false);
@@ -219,149 +122,12 @@ const AdminDashboard = () => {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {stats.map((stat) => (
-            <Card
-              key={stat.title}
-              className="hover-lift cursor-pointer"
-              onClick={() => {
-                if (stat.title === 'إجمالي الطلاب') navigate('/admin/users');
-                if (stat.title === 'المعلمات النشطات')
-                  navigate('/admin/teachers');
-                if (stat.title === 'الفصول') navigate('/admin/classrooms');
-                if (stat.title === 'الإيرادات الشهرية')
-                  navigate('/admin/payments');
-              }}
-            >
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">
-                      {stat.title}
-                    </p>
-                    <p className="text-2xl font-bold text-foreground mt-1">
-                      {stat.value}
-                    </p>
-                    <div className="flex items-center gap-1 mt-1">
-                      {stat.trend === 'up' && (
-                        <TrendingUp className="w-4 h-4 text-success" />
-                      )}
-                      {stat.trend === 'down' && (
-                        <TrendingDown className="w-4 h-4 text-destructive" />
-                      )}
-                      <span
-                        className={`text-sm ${
-                          stat.trend === 'up'
-                            ? 'text-success'
-                            : stat.trend === 'down'
-                              ? 'text-destructive'
-                              : 'text-muted-foreground'
-                        }`}
-                      >
-                        {stat.change}
-                      </span>
-                    </div>
-                  </div>
-                  <div
-                    className={`w-12 h-12 rounded-xl ${stat.color} flex items-center justify-center`}
-                  >
-                    <stat.icon className="w-6 h-6 text-white" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <DashboardStats />
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Recent Activity */}
-          <Card className="lg:col-span-2">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-lg font-semibold">
-                النشاط الأخير
-              </CardTitle>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-admin"
-                onClick={() => navigate('/admin/reports')}
-              >
-                عرض الكل
-              </Button>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {recentActivities.map((activity) => (
-                  <div
-                    key={activity.id}
-                    className="flex items-center gap-4 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors cursor-pointer"
-                    onClick={() => {
-                      if (activity.type === 'enrollment')
-                        navigate('/admin/users');
-                      if (activity.type === 'payment')
-                        navigate('/admin/payments');
-                      if (activity.type === 'staff')
-                        navigate('/admin/teachers');
-                      if (activity.type === 'report')
-                        navigate('/admin/reports');
-                    }}
-                  >
-                    <Avatar className="h-10 w-10">
-                      <AvatarImage src="/placeholder.svg" />
-                      <AvatarFallback className="bg-admin-accent text-admin-accent-foreground text-sm">
-                        {activity.name
-                          .split(' ')
-                          .map((n) => n[0])
-                          .join('')}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <p className="font-medium text-sm">{activity.action}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {activity.name}
-                      </p>
-                    </div>
-                    <span className="text-xs text-muted-foreground">
-                      {activity.time}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Pending Actions */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                <Bell className="w-5 h-5 text-admin" />
-                الإجراءات المعلقة
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {pendingActions.map((action) => (
-                  <div
-                    key={action.id}
-                    className="flex items-start gap-3 p-3 rounded-lg border border-border hover:border-admin/50 transition-colors cursor-pointer"
-                    onClick={() => navigate(action.route)}
-                  >
-                    <div
-                      className={`w-2 h-2 rounded-full mt-2 ${
-                        action.priority === 'high'
-                          ? 'bg-destructive'
-                          : action.priority === 'medium'
-                            ? 'bg-warning'
-                            : 'bg-muted-foreground'
-                      }`}
-                    />
-                    <p className="text-sm">{action.title}</p>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          <RecentActivities />
+          <PendingActions />
         </div>
 
         {/* Quick Actions */}
@@ -384,7 +150,7 @@ const AdminDashboard = () => {
               <Button
                 variant="outline"
                 className="h-auto py-4 flex flex-col gap-2 hover:border-admin hover:bg-admin/5"
-                onClick={() => navigate('/admin/teachers')}
+                onClick={() => navigate("/admin/teachers")}
               >
                 <GraduationCap className="w-6 h-6 text-admin" />
                 <span className="text-sm">إضافة معلمة</span>
@@ -400,7 +166,7 @@ const AdminDashboard = () => {
               <Button
                 variant="outline"
                 className="h-auto py-4 flex flex-col gap-2 hover:border-admin hover:bg-admin/5"
-                onClick={() => navigate('/admin/reports')}
+                onClick={() => navigate("/admin/reports")}
               >
                 <FileText className="w-6 h-6 text-admin" />
                 <span className="text-sm">إنشاء تقرير</span>
@@ -408,6 +174,7 @@ const AdminDashboard = () => {
             </div>
           </CardContent>
         </Card>
+
       </div>
 
       {/* Add Parent with Child Dialog */}

@@ -31,6 +31,9 @@ import RoleBasedRoute from './pages/Registration/RoleBasedRoute';
 import { Toaster } from 'react-hot-toast';
 import CompletePayment from './pages/Registration/CheckOut';
 import PaymentSuccessGuard from './pages/Registration/PaymentSuccessGuard';
+import PaymentSuccess from './pages/Registration/PaymentSuccess';
+import PublicWebsite from './pages/PublicWebsite';
+
 
 const queryClient = new QueryClient();
 
@@ -42,7 +45,7 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             {/* Public routes */}
-            <Route path="/" element={<div>google</div>} />
+            <Route path="/" element={<PublicWebsite/>} />
             <Route path="/register" element={<ParentRegistration />} />
             <Route path="/login" element={<LoginPage />} />
 

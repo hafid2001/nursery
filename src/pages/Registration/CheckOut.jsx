@@ -23,9 +23,6 @@ const CompletePayment = () => {
         onSuccess: (data) => {
           if (data.url) {
             window.location.href = data.url;
-          } else {
-            toast.error('فشل إنشاء جلسة الدفع');
-            setProcessing(false);
           }
         },
         onError: (error) => {

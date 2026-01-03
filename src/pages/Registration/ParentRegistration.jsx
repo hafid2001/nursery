@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { gsap } from "gsap";
 import { ChildInfoSchema, DocumentsSchema, ParentInfoSchema } from '../../schemas/auth.schema';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -33,6 +34,11 @@ const ParentRegistration = () => {
 
 
   const [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    gsap.from(".registration-sidebar", { opacity: 0, x: -50, duration: 1, ease: "power3.out" });
+    gsap.from(".registration-form-card", { opacity: 0, x: 50, duration: 1, ease: "power3.out", delay: 0.2 });
+  }, []);
 
   function validateStep1() {
     const result = ParentInfoSchema.safeParse({
@@ -183,8 +189,18 @@ const ParentRegistration = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center p-4">
-      <Card className="w-full max-w-lg border-0 shadow-none">
+    <div className="min-h-screen lg:grid lg:grid-cols-2 bg-white">
+      {/* Left sidebar with a gradient background */}
+      <div className="hidden lg:flex items-center justify-center p-6 bg-gradient-to-br from-purple-600 to-indigo-700 registration-sidebar">
+        <div className="text-center text-white space-y-4">
+          <h1 className="text-4xl font-bold">أهلاً بك في حضانة نجوم المستقبل</h1>
+          <p className="text-lg">سجل الآن لتمنح طفلك أفضل بداية تعليمية</p>
+        </div>
+      </div>
+
+      {/* Right side - Registration Form */}
+      <div className="flex items-center justify-center p-4">
+        <Card className="w-full max-w-lg border-0 shadow-none registration-form-card">
         <CardHeader className="space-y-4 pb-8">
           <CardTitle className="text-3xl font-light text-center text-gray-900">
             تسجيل ولي الأمر
@@ -462,6 +478,7 @@ const ParentRegistration = () => {
         </CardContent>
       </Card>
     </div>
+  </div>
   );
 };
 

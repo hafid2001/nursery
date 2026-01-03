@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { gsap } from "gsap";
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/auth.context.jsx';
 import { LoginSchema } from '@/schemas/auth.schema';
@@ -14,6 +15,11 @@ const LoginPage = () => {
     password: '',
   });
   const [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    gsap.from(".login-sidebar", { opacity: 0, x: -50, duration: 1, ease: "power3.out" });
+    gsap.from(".login-form-card", { opacity: 0, x: 50, duration: 1, ease: "power3.out", delay: 0.2 });
+  }, []);
 
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -57,8 +63,18 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-      <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-md">
+    <div className="min-h-screen lg:grid lg:grid-cols-2 bg-white">
+      {/* Left sidebar with a gradient background */}
+      <div className="hidden lg:flex items-center justify-center p-6 bg-gradient-to-br from-purple-600 to-indigo-700 login-sidebar">
+        <div className="text-center text-white space-y-4">
+          <h1 className="text-4xl font-bold">أهلاً بك في حضانة نجوم المستقبل</h1>
+          <p className="text-lg">سجل الدخول للوصول إلى حسابك</p>
+        </div>
+      </div>
+
+      {/* Right side - Login Form */}
+      <div className="flex items-center justify-center p-4">
+        <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-md login-form-card">
         <h2 className="text-2xl font-light text-center text-gray-800 mb-6">
           تسجيل الدخول
         </h2>
@@ -107,6 +123,7 @@ const LoginPage = () => {
         </Button>
       </div>
     </div>
+  </div>
   );
 };
 

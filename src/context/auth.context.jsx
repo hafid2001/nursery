@@ -35,12 +35,6 @@ export const AuthProvider = ({ children }) => {
    
   };
 
-  useEffect(() => {
-    if (token) {
-      api.setAuthToken(token);
-    }
-  }, [token]);
-
   const login = async (payload, callbacks = {}) => {
     await loginService(payload, {
       onStart: callbacks.onStart || setLoading,

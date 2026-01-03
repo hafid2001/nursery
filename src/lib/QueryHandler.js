@@ -1,11 +1,8 @@
+import { getToken } from '@/utils/token';
+
 class QueryHandler {
   constructor(baseUrl) {
     this.baseUrl = baseUrl;
-    this.authToken = null;
-  }
-
-  setAuthToken(token) {
-    this.authToken = token;
   }
 
   async request(
@@ -21,7 +18,8 @@ class QueryHandler {
         ...options.headers,
       };
 
-      if (this.authToken) headers['Authorization'] = `Bearer ${this.authToken}`;
+      const token = getToken();
+      if (token) headers['Authorization'] = `Bearer ${token}`;
 
       const response = await fetch(`${this.baseUrl}${endpoint}`, {
         method: options.method || 'GET',
@@ -41,5 +39,5 @@ class QueryHandler {
   }
 }
 
-const api = new QueryHandler('http://localhost:5000');
+const api = new QueryHandler('https://nursery-backend-b7bv.onrender.com');
 export default api;

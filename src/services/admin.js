@@ -27,59 +27,269 @@ export const getParentList = async (
   );
 };
 
-export const addParent = async(
+export const addParent = async (
   payload,
   { onStart, onSuccess, onError, onFinal } = {}
 ) => {
-    return api.request(
-      `/admin/parent/create`,
-      {
-        onStart,
-        onSuccess,
-        onError,
-        onFinal,
+  return api.request(
+    `/admin/parent/create`,
+    {
+      onStart,
+      onSuccess,
+      onError,
+      onFinal,
+    },
+    {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }
+  );
+};
+
+export const approve = async (
+  parent_id,
+  { onStart, onSuccess, onError, onFinal } = {}
+) => {
+  return api.request(
+    `/admin/parent/${parent_id}/approve`,
+    {
+      onStart,
+      onSuccess,
+      onError,
+      onFinal,
+    },
+    {
+      method: 'PUT',
+    }
+  );
+};
+
+export const reject = async (
+  parent_id,
+  { onStart, onSuccess, onError, onFinal } = {}
+) => {
+  return api.request(
+    `/admin/parent/${parent_id}/approve`,
+    {
+      onStart,
+      onSuccess,
+      onError,
+      onFinal,
+    },
+    {
+      method: 'PUT',
+    }
+  );
+};
+
+export const getTeacherList = async (
+  status,
+  page,
+  { onStart, onSuccess, onError, onFinal } = {}
+) => {
+  const queryParams = new URLSearchParams({
+    page: page?.toString() || '1',
+  });
+
+  if (status && status !== 'all') {
+    queryParams.append('status', status);
+  }
+
+  return api.request(
+    `/admin/filtered-teacher-list?${queryParams.toString()}`,
+    {
+      onStart,
+      onSuccess,
+      onError,
+      onFinal,
+    },
+    {
+      method: 'GET',
+    }
+  );
+};
+
+export const addTeacher = async (
+  payload,
+  { onStart, onSuccess, onError, onFinal } = {}
+) => {
+  return api.request(
+    `/admin/teacher/create`,
+    {
+      onStart,
+      onSuccess,
+      onError,
+      onFinal,
+    },
+    {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }
+  );
+};
+
+export const updateTeacher = async (
+  teacher_id,
+  payload,
+  { onStart, onSuccess, onError, onFinal } = {}
+) => {
+  return api.request(
+    `/admin/teacher/${teacher_id}`,
+    {
+      onStart,
+      onSuccess,
+      onError,
+      onFinal,
+    },
+    {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    }
+  );
+};
+
+
+export const getClassroomList = async (
+  { onStart, onSuccess, onError, onFinal } = {}
+) => {
+  console.log("getClassroomList called");
+  return api.request(
+    `/admin/classroom`,
+    {
+      onStart: () => { console.log("API request started for classrooms"); onStart && onStart(); },
+      onSuccess: (data) => {
+        console.log("API request successful for classrooms, raw data:", data);
+        const transformedData = data.data.map((classroom) => ({
+          id: classroom.id,
+          name: classroom.name,
+          capacity: classroom.capacity,
+          enrolled: classroom.current_enrollment,
+          ageGroup: "N/A", // Placeholder, as ageGroup is not in backend response
+          teacher : classroom.teacher,
+          children: classroom.children, // Pass children directly
+        }));
+        console.log("Transformed classrooms data:", transformedData);
+        onSuccess(transformedData);
       },
-      {
-        method: 'POST',
-        body : JSON.stringify(payload)
-      }
-    );
-}
+      onError: (err) => { console.error("API request failed for classrooms:", err); onError && onError(err); },
+      onFinal: () => { console.log("API request finished for classrooms"); onFinal && onFinal(); },
+    },
+    { method: 'GET' }
+  );
+};
 
 
-export const approve = async(
-  parent_id,
-  {onStart , onSuccess , onError , onFinal} = {}
+export const getClassroomStudents = async (
+  classroomId,
+  { onStart, onSuccess, onError, onFinal } = {}
 ) => {
   return api.request(
-    `/admin/parent/${parent_id}/approve`,
-    {
-      onStart,
-      onSuccess,
-      onError,
-      onFinal
-    },
-    {
-      method : 'PUT',
-    }
-  )
-}
+    `/admin/classrooms/${classroomId}/students`,
+    { onStart, onSuccess, onError, onFinal },
+    { method: 'GET' }
+  );
+};
 
-
-export const reject = async(
-  parent_id,
-  {onStart , onSuccess , onError , onFinal} = {}
+export const addClassroom = async (
+  payload,
+  { onStart, onSuccess, onError, onFinal } = {}
 ) => {
   return api.request(
-    `/admin/parent/${parent_id}/approve`,
+    `/admin/classroom/create`,
+    { onStart, onSuccess, onError, onFinal },
+    { method: 'POST', body: JSON.stringify(payload) }
+  );
+};
+
+export const updateClassroom = async (
+  classroomId,
+  payload,
+  { onStart, onSuccess, onError, onFinal } = {}
+) => {
+  return api.request(
+    `/admin/classrooms/${classroomId}`,
+    { onStart, onSuccess, onError, onFinal },
+    { method: 'PUT', body: JSON.stringify(payload) }
+  );
+};
+
+export const getDashboardStats = async (
+  { onStart, onSuccess, onError, onFinal } = {}
+) => {
+  return api.request(
+    `/stats/admin/dashboard`,
+    { onStart, onSuccess, onError, onFinal },
+    { method: 'GET' }
+  );
+};
+
+
+export const getRecentActivities = async (
+  { onStart, onSuccess, onError, onFinal } = {}
+) => {
+  return api.request(
+    `/stats/admin/recent-activities`,
+    { onStart, onSuccess, onError, onFinal },
+    { method: 'GET' }
+  );
+};
+
+export const getPendingActions = async (
+  { onStart, onSuccess, onError, onFinal } = {}
+) => {
+  return api.request(
+    `/stats/admin/pending-actions`,
+    { onStart, onSuccess, onError, onFinal },
+    { method: 'GET' }
+  );
+};
+
+export const getPaymentsList = async (
+  status,
+  page,
+  searchQuery,
+  { onStart, onSuccess, onError, onFinal } = {}
+) => {
+  const queryParams = new URLSearchParams({
+    page: page?.toString() || '1',
+  });
+
+  if (status && status !== 'all') {
+    queryParams.append('status', status);
+  }
+
+  if (searchQuery) {
+    queryParams.append('search', searchQuery);
+  }
+
+  return api.request(
+    `/admin/payments?${queryParams.toString()}`,
     {
       onStart,
-      onSuccess,
+      onSuccess: (data) => {
+        const transformedData = data.data.map((payment) => ({
+          id: payment.id,
+          invoiceNumber: payment.invoiceNumber || `INV-${String(payment.id).padStart(3, '0')}`,
+          parentName: payment.parentName,
+          amount: payment.amount,
+          currency: payment.currency,
+          dueDate: payment.dueDate,
+          paymentDate: payment.paymentDate,
+          status: payment.status,
+          paymentMethod: payment.paymentMethod === 'credit_card' ? 'بطاقة ائتمان' : 'تحويل بنكي',
+        }));
+        onSuccess({
+          data: transformedData,
+          totalCount: data.totalCount,
+          currentPage: data.currentPage,
+          totalPages: data.totalPages,
+        });
+      },
       onError,
-      onFinal
+      onFinal,
     },
     {
-      method : 'PUT',
+      method: 'GET',
     }
-  )
-}
+  );
+};

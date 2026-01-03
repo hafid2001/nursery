@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import AdminLayout from '@/components/layout/AdminLayout';
+import { getPaymentsList } from '@/services/admin';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
 import {
   Table,
   TableBody,
@@ -40,78 +40,56 @@ import {
   TrendingUp,
   X,
 } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const AdminPayments = () => {
-  const { toast } = useToast();
-  const [payments, setPayments] = useState(initialPayments);
+  const [payments, setPayments] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   const [isRecordPaymentOpen, setIsRecordPaymentOpen] = useState(false);
   const [paymentForm, setPaymentForm] = useState({
-    family: '',
+    parentName: '',
     amount: '',
-    method: 'بطاقة ائتمان',
+    method: 'credit_card',
   });
 
-  const filteredPayments = payments.filter((payment) => {
-    const matchesSearch =
-      payment.family.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      payment.id.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus =
-      statusFilter === 'all' || payment.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  const filteredPayments = payments;
 
-  const totalRevenue = payments.reduce((sum, p) => sum + p.amount, 0);
-  const collected = payments
-    .filter((p) => p.status === 'paid')
-    .reduce((sum, p) => sum + p.amount, 0);
-  const pending = payments
-    .filter((p) => p.status === 'pending')
-    .reduce((sum, p) => sum + p.amount, 0);
-  const overdue = payments
-    .filter((p) => p.status === 'overdue')
-    .reduce((sum, p) => sum + p.amount, 0);
 
-  const handleRecordPayment = () => {
-    const newPayment = {
-      id: `INV-${String(payments.length + 1).padStart(3, '0')}`,
-      family: paymentForm.family,
-      amount: parseFloat(paymentForm.amount),
-      dueDate: new Date().toLocaleDateString('ar-SA', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-      }),
-      paidDate: new Date().toLocaleDateString('ar-SA', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-      }),
-      status: 'paid',
-      method: paymentForm.method,
-    };
-    setPayments([newPayment, ...payments]);
-    toast({
-      title: 'تم تسجيل الدفعة',
-      description: `تم تسجيل دفعة من ${paymentForm.family}.`,
-    });
-    setIsRecordPaymentOpen(false);
-    setPaymentForm({ family: '', amount: '', method: 'بطاقة ائتمان' });
+  const fetchPayments = () => {
+    setLoading(true);
+    getPaymentsList(
+      statusFilter,
+      currentPage,
+      searchQuery,
+      {
+        onSuccess: (data) => {
+          if (currentPage === 1) {
+            setPayments(data.data);
+          } else {
+            setPayments((prevPayments) => [...prevPayments, ...data.data]);
+          }
+          setTotalCount(data.totalCount);
+          setCurrentPage(data.currentPage);
+          setTotalPages(data.totalPages);
+          setLoading(false);
+        },
+        onError: (err) => {
+          toast.error('فشل تحميل المدفوعات.');
+          setPayments([])
+          setLoading(false);
+        },
+      }
+    );
   };
 
-  const handleExport = () => {
-    toast({
-      title: 'بدأ التصدير',
-      description: 'جاري تصدير بيانات المدفوعات...',
-    });
-    setTimeout(() => {
-      toast({
-        title: 'اكتمل التصدير',
-        description: 'تم تحميل بيانات المدفوعات.',
-      });
-    }, 1500);
-  };
+  useEffect(() => {
+    fetchPayments();
+  }, [statusFilter, currentPage, searchQuery]);
 
   const clearFilters = () => {
     setSearchQuery('');
@@ -144,116 +122,21 @@ const AdminPayments = () => {
               تتبع الرسوم الدراسية والفواتير
             </p>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" className="gap-2" onClick={handleExport}>
-              <Download className="w-4 h-4" />
-              تصدير
-            </Button>
-            <Button
-              className="gap-2 bg-admin hover:bg-admin/90 text-admin-foreground"
-              onClick={() => setIsRecordPaymentOpen(true)}
-            >
-              <CreditCard className="w-4 h-4" />
-              تسجيل دفعة
-            </Button>
-          </div>
         </div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">
-                    الإيرادات الشهرية
-                  </p>
-                  <p className="text-2xl font-bold">
-                    {totalRevenue.toLocaleString()} ر.س
-                  </p>
-                  <p className="text-xs text-success flex items-center gap-1">
-                    <TrendingUp className="w-3 h-3" />
-                    +8.5% من الشهر الماضي
-                  </p>
-                </div>
-                <div className="w-10 h-10 rounded-lg bg-admin/10 flex items-center justify-center">
-                  <DollarSign className="w-5 h-5 text-admin" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">المحصّل</p>
-                  <p className="text-2xl font-bold text-success">
-                    {collected.toLocaleString()} ر.س
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {totalRevenue > 0
-                      ? ((collected / totalRevenue) * 100).toFixed(1)
-                      : 0}
-                    % محصّل
-                  </p>
-                </div>
-                <div className="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center">
-                  <CheckCircle className="w-5 h-5 text-success" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">قيد الانتظار</p>
-                  <p className="text-2xl font-bold text-warning">
-                    {pending.toLocaleString()} ر.س
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {payments.filter((p) => p.status === 'pending').length}{' '}
-                    فاتورة
-                  </p>
-                </div>
-                <div className="w-10 h-10 rounded-lg bg-warning/10 flex items-center justify-center">
-                  <Clock className="w-5 h-5 text-warning" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">متأخر</p>
-                  <p className="text-2xl font-bold text-destructive">
-                    {overdue.toLocaleString()} ر.س
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {payments.filter((p) => p.status === 'overdue').length}{' '}
-                    فاتورة
-                  </p>
-                </div>
-                <div className="w-10 h-10 rounded-lg bg-destructive/10 flex items-center justify-center">
-                  <AlertCircle className="w-5 h-5 text-destructive" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
         {/* Filters */}
         <Card>
           <CardContent className="pt-6">
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="relative flex-1">
                 <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  placeholder="البحث بالعائلة أو رقم الفاتورة..."
+                  <Input
+                  placeholder="البحث بالاسم أو رقم الفاتورة..."
                   className="pr-10"
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setCurrentPage(1); // Reset to first page on new search
+                  }}
                 />
               </div>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -279,7 +162,7 @@ const AdminPayments = () => {
         {/* Payments Table */}
         <Card>
           <CardHeader>
-            <CardTitle>المدفوعات الأخيرة ({filteredPayments.length})</CardTitle>
+            <CardTitle>المدفوعات الأخيرة ({totalCount})</CardTitle>
           </CardHeader>
           <CardContent>
             <Table>
@@ -298,14 +181,14 @@ const AdminPayments = () => {
                 {filteredPayments.map((payment) => (
                   <TableRow key={payment.id}>
                     <TableCell className="font-mono text-sm">
-                      {payment.id}
+                      {payment.invoiceNumber}
                     </TableCell>
                     <TableCell className="font-medium">
-                      {payment.family}
+                      {payment.parentName}
                     </TableCell>
                     <TableCell>{payment.amount.toLocaleString()} ر.س</TableCell>
                     <TableCell>{payment.dueDate}</TableCell>
-                    <TableCell>{payment.paidDate || '-'}</TableCell>
+                    <TableCell>{payment.paymentDate || '-'}</TableCell>
                     <TableCell>
                       <Badge
                         className={
@@ -320,83 +203,33 @@ const AdminPayments = () => {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {payment.method || '-'}
+                      {payment.paymentMethod || '-'}
                     </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
+            {loading && <p className="text-center py-4">جارٍ تحميل المدفوعات...</p>}
+            {!loading && payments.length === 0 && (
+              <p className="text-center py-4 text-muted-foreground">
+                لا توجد مدفوعات لعرضها.
+              </p>
+            )}
+            {!loading && currentPage < totalPages && (
+              <div className="flex justify-center mt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setCurrentPage((prev) => prev + 1)}
+                  disabled={loading}
+                >
+                  تحميل المزيد
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
 
-      {/* Record Payment Dialog */}
-      <Dialog open={isRecordPaymentOpen} onOpenChange={setIsRecordPaymentOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>تسجيل دفعة</DialogTitle>
-            <DialogDescription>أدخل تفاصيل الدفعة.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="family">العائلة</Label>
-              <Input
-                id="family"
-                value={paymentForm.family}
-                onChange={(e) =>
-                  setPaymentForm({ ...paymentForm, family: e.target.value })
-                }
-                placeholder="مثال: عائلة العتيبي"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="amount">المبلغ (ر.س)</Label>
-              <Input
-                id="amount"
-                type="number"
-                value={paymentForm.amount}
-                onChange={(e) =>
-                  setPaymentForm({ ...paymentForm, amount: e.target.value })
-                }
-                placeholder="مثال: 1250"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>طريقة الدفع</Label>
-              <Select
-                value={paymentForm.method}
-                onValueChange={(v) =>
-                  setPaymentForm({ ...paymentForm, method: v })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="بطاقة ائتمان">بطاقة ائتمان</SelectItem>
-                  <SelectItem value="تحويل بنكي">تحويل بنكي</SelectItem>
-                  <SelectItem value="نقداً">نقداً</SelectItem>
-                  <SelectItem value="شيك">شيك</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsRecordPaymentOpen(false)}
-            >
-              إلغاء
-            </Button>
-            <Button
-              className="bg-admin hover:bg-admin/90"
-              onClick={handleRecordPayment}
-            >
-              تسجيل الدفعة
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </AdminLayout>
   );
 };

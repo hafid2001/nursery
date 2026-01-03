@@ -1,0 +1,183 @@
+import { useState } from 'react';
+import { z } from 'zod';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { addTeacher } from '@/services/admin';
+import { AddTeacherSchema } from '@/schemas/admin.schema';
+import toast from 'react-hot-toast';
+import { Loader2 } from 'lucide-react';
+
+const INITIAL_STATE = {
+  full_name: '',
+  email: '',
+  phone: '',
+  password: '',
+  status: 'ACTIVE',
+};
+
+const AddTeacherDialog = ({ open, onOpenChange, refreshData }) => {
+  const [formData, setFormData] = useState(INITIAL_STATE);
+  const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async () => {
+    try {
+      const validatedData = AddTeacherSchema.parse(formData);
+      setErrors({});
+
+      setIsSubmitting(true);
+      addTeacher(validatedData, {
+        onSuccess: () => {
+          toast.success('تمت إضافة المعلمة بنجاح');
+          setFormData(INITIAL_STATE);
+          setErrors({});
+          onOpenChange(false);
+          refreshData();
+        },
+        onError: () => {
+          toast.error('فشل في إضافة المعلمة');
+        },
+        onFinal: () => setIsSubmitting(false),
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const fieldErrors = {};
+        error.errors.forEach((err) => {
+          fieldErrors[err.path[0]] = err.message;
+        });
+        setErrors(fieldErrors);
+        toast.error('يرجى تصحيح الأخطاء في النموذج');
+      } else {
+        toast.error('حدث خطأ غير متوقع');
+      }
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>إضافة معلمة جديدة</DialogTitle>
+          <DialogDescription>أدخل بيانات المعلمة.</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <Label htmlFor="full_name">الاسم الكامل</Label>
+            <Input
+              id="full_name"
+              value={formData.full_name}
+              onChange={(e) =>
+                setFormData({ ...formData, full_name: e.target.value })
+              }
+              className={errors.full_name ? 'border-destructive' : ''}
+            />
+            {errors.full_name && (
+              <p className="text-sm text-destructive">{errors.full_name}</p>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="email">البريد الإلكتروني</Label>
+            <Input
+              id="email"
+              type="email"
+              value={formData.email}
+              onChange={(e) =>
+                setFormData({ ...formData, email: e.target.value })
+              }
+              className={errors.email ? 'border-destructive' : ''}
+            />
+            {errors.email && (
+              <p className="text-sm text-destructive">{errors.email}</p>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="phone">رقم الهاتف</Label>
+            <Input
+              id="phone"
+              value={formData.phone}
+              onChange={(e) =>
+                setFormData({ ...formData, phone: e.target.value })
+              }
+              className={errors.phone ? 'border-destructive' : ''}
+            />
+            {errors.phone && (
+              <p className="text-sm text-destructive">{errors.phone}</p>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="password">كلمة المرور</Label>
+            <Input
+              id="password"
+              type="password"
+              value={formData.password}
+              onChange={(e) =>
+                setFormData({ ...formData, password: e.target.value })
+              }
+              className={errors.password ? 'border-destructive' : ''}
+            />
+            {errors.password && (
+              <p className="text-sm text-destructive">{errors.password}</p>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Label>الحالة</Label>
+            <Select
+              value={formData.status}
+              onValueChange={(v) => setFormData({ ...formData, status: v })}
+            >
+              <SelectTrigger
+                className={errors.status ? 'border-destructive' : ''}
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ACTIVE">نشطة</SelectItem>
+                <SelectItem value="UNACTIVE">في إجازة</SelectItem>
+              </SelectContent>
+            </Select>
+            {errors.status && (
+              <p className="text-sm text-destructive">{errors.status}</p>
+            )}
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            إلغاء
+          </Button>
+          <Button
+            className="bg-admin hover:bg-admin/90"
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                جاري الإضافة...
+              </>
+            ) : (
+              'إضافة'
+            )}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+export default AddTeacherDialog;

@@ -20,7 +20,7 @@ export const Login = async (
   { onStart, onSuccess, onError, onFinal } = {}
 ) => {
   return api.request(
-    '/login',
+    '/auth/login',
     {
       onStart,
       onSuccess: (data) => {
