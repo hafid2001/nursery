@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/select';
 import { uploadToCloudinary } from '@/lib/cloudinary';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { Loading } from '@/components/ui/loading';
 
 import { addParent } from '@/services/admin'; // Update path as needed
 import { ParentSignUpSchema } from '@/schemas/auth.schema'; // Update path as needed
@@ -53,7 +53,6 @@ const AddParentDialog = ({ open, onOpenChange, refreshData }) => {
     } catch (err) {
       const formattedErrors = {};
       err.errors.forEach((e) => {
-        // Handle nested child errors mapping
         const path = e.path.join('.');
         formattedErrors[path] = e.message;
       });
@@ -310,10 +309,10 @@ const AddParentDialog = ({ open, onOpenChange, refreshData }) => {
           <Button
             onClick={handleSubmit}
             disabled={isSubmitting || uploading}
-            className="min-w-[100px]"
+            className="min-w-[100px] bg-blue-500 hover:bg-blue-600 text-white"
           >
             {isSubmitting ? (
-              <Loader2 className="animate-spin h-4 w-4" />
+              <Loading variant="button" text="جاري الإضافة..." />
             ) : (
               'إضافة'
             )}

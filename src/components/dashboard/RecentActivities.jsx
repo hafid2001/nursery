@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 import { Activity, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Empty } from '@/components/ui/empty';
 
 const RecentActivities = () => {
   const navigate = useNavigate();
@@ -85,13 +86,7 @@ const RecentActivities = () => {
             ))}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <div className="rounded-full bg-muted p-4 mb-4">
-              <Activity className="w-8 h-8 text-muted-foreground" />
-            </div>
-            <p className="text-sm font-medium text-muted-foreground mb-1">لا يوجد نشاط حديث</p>
-            <p className="text-xs text-muted-foreground">سيظهر النشاط هنا عندما يكون متاحًا</p>
-          </div>
+          <Empty variant="activities" />
         )}
       </CardContent>
     </Card>

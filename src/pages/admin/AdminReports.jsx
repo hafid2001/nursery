@@ -30,8 +30,8 @@ import {
   TrendingUp,
   Clock,
   FileText,
-  Loader2,
 } from 'lucide-react';
+import { Loading } from '@/components/ui/loading';
 
 const AdminReports = () => {
   const { toast } = useToast();
@@ -171,10 +171,7 @@ const AdminReports = () => {
                   disabled={generatingReportId === report.id}
                 >
                   {generatingReportId === report.id ? (
-                    <>
-                      <Loader2 className="w-4 h-4 ml-2 animate-spin" />
-                      جاري الإنشاء...
-                    </>
+                    <Loading variant="button" text="جاري الإنشاء..." />
                   ) : (
                     'إنشاء التقرير'
                   )}
@@ -228,13 +225,7 @@ const AdminReports = () => {
                         تحميل
                       </Button>
                     ) : (
-                      <Badge
-                        variant="secondary"
-                        className="bg-warning/10 text-warning"
-                      >
-                        <Loader2 className="w-3 h-3 ml-1 animate-spin" />
-                        جاري المعالجة...
-                      </Badge>
+                      <Loading variant="inline" text="جاري المعالجة..." size="sm" />
                     )}
                   </div>
                 </div>

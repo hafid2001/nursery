@@ -6,12 +6,23 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Edit, Users, GraduationCap, Building2, Settings } from 'lucide-react';
 
 const ClassroomCard = ({ classroom, onEdit, onViewStudents, openSettings, openStudents, openEdit, color, iconColor }) => {
+  // Convert border color to background color
+  const getBackgroundColor = (borderColor) => {
+    if (borderColor.includes('admin-accent')) return 'bg-admin-accent/10';
+    if (borderColor.includes('blue-400')) return 'bg-blue-400/10';
+    if (borderColor.includes('green-400')) return 'bg-green-400/10';
+    if (borderColor.includes('yellow-400')) return 'bg-yellow-400/10';
+    if (borderColor.includes('purple-400')) return 'bg-purple-400/10';
+    return 'bg-slate-50';
+  };
+
+  const backgroundColor = getBackgroundColor(color);
   const occupancyRate = (classroom.current_enrollment / classroom.capacity) * 100;
 
   return (
     <Card
       key={classroom.id}
-      className={`hover-lift border-2 ${color}`}
+      className={`hover-lift border-2 ${color} ${backgroundColor}`}
     >
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
@@ -43,7 +54,7 @@ const ClassroomCard = ({ classroom, onEdit, onViewStudents, openSettings, openSt
             </span>
           </div>
           <Progress
-            value={occupancyRate}
+            value={(classroom.current_enrollment / classroom.capacity) * 100}
             className="h-2"
           />
         </div>
@@ -68,6 +79,22 @@ const ClassroomCard = ({ classroom, onEdit, onViewStudents, openSettings, openSt
               </p>
               <p className="text-xs text-muted-foreground">
                 معلمة رئيسية
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Avatar className="h-8 w-8">
+              <AvatarImage src="/placeholder.svg" />
+              <AvatarFallback className="text-xs bg-muted">
+                مس
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <p className="text-sm font-medium">
+                غير محدد
+              </p>
+              <p className="text-xs text-muted-foreground">
+                معلمة مساعدة
               </p>
             </div>
           </div>

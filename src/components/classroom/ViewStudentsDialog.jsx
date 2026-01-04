@@ -8,7 +8,8 @@ import {
 } from '@/components/ui/dialog';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Loader2 } from 'lucide-react';
+import { Loading } from '@/components/ui/loading';
+import { Empty } from '@/components/ui/empty';
 
 const ViewStudentsDialog = ({ open, onOpenChange, classroom, students }) => {
   const loading = false; // Students are passed directly, so no internal loading state
@@ -24,9 +25,7 @@ const ViewStudentsDialog = ({ open, onOpenChange, classroom, students }) => {
         </DialogHeader>
         <div className="py-4">
           {loading ? (
-            <div className="flex justify-center py-8">
-              <Loader2 className="animate-spin" />
-            </div>
+            <Loading variant="page" text="جاري تحميل الطلاب..." />
           ) : (
             <div className="space-y-2 max-h-[300px] overflow-y-auto">
               {(students || []).map((student, index) => (
@@ -43,9 +42,7 @@ const ViewStudentsDialog = ({ open, onOpenChange, classroom, students }) => {
                 </div>
               ))}
               {(students || []).length === 0 && (
-                <p className="text-center text-muted-foreground">
-                  لا يوجد طلاب
-                </p>
+                <Empty variant="students" className="py-6" />
               )}
             </div>
           )}

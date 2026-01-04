@@ -40,6 +40,8 @@ import {
   TrendingUp,
   X,
 } from 'lucide-react';
+import { Loading } from '@/components/ui/loading';
+import { Empty } from '@/components/ui/empty';
 import toast from 'react-hot-toast';
 
 const AdminPayments = () => {
@@ -209,11 +211,13 @@ const AdminPayments = () => {
                 ))}
               </TableBody>
             </Table>
-            {loading && <p className="text-center py-4">جارٍ تحميل المدفوعات...</p>}
+            {loading && (
+              <div className="col-span-full py-8">
+                <Loading variant="page" text="جارٍ تحميل المدفوعات..." size="lg" />
+              </div>
+            )}
             {!loading && payments.length === 0 && (
-              <p className="text-center py-4 text-muted-foreground">
-                لا توجد مدفوعات لعرضها.
-              </p>
+              <Empty variant="payments" />
             )}
             {!loading && currentPage < totalPages && (
               <div className="flex justify-center mt-4">

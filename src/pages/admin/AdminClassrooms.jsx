@@ -8,6 +8,8 @@ import EditClassroomDialog from '@/components/classroom/EditClassroomDialog';
 import ViewStudentsDialog from '@/components/classroom/ViewStudentsDialog';
 import { getClassroomList } from '@/services/admin';
 import ClassroomCard from '@/components/classroom/ClassroomCard';
+import { Loading } from '@/components/ui/loading';
+import { Empty } from '@/components/ui/empty';
 
 const AdminClassrooms = () => {
   const [classrooms, setClassrooms] = useState([]);
@@ -79,10 +81,19 @@ const AdminClassrooms = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {loading ? (
-            <div>Loading classrooms...</div>
+            <div className="col-span-full">
+              <Loading variant="page" text="جاري تحميل الفصول..." size="lg" />
+            </div>
           ) : classrooms.length === 0 ? (
-            <div className="col-span-full text-center text-muted-foreground">
-              لا توجد فصول دراسية متاحة حاليًا.
+            <div className="col-span-full">
+              <Empty
+                variant="classrooms"
+                action={
+                  <Empty.PrimaryAction onClick={() => setIsAddOpen(true)}>
+                    إضافة فصل جديد
+                  </Empty.PrimaryAction>
+                }
+              />
             </div>
           ) : (
             classrooms.map((classroom, index) => {

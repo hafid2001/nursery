@@ -21,7 +21,7 @@ import {
 import { addTeacher } from '@/services/admin';
 import { AddTeacherSchema } from '@/schemas/admin.schema';
 import toast from 'react-hot-toast';
-import { Loader2 } from 'lucide-react';
+import { Loading } from '@/components/ui/loading';
 
 const INITIAL_STATE = {
   full_name: '',
@@ -166,10 +166,7 @@ const AddTeacherDialog = ({ open, onOpenChange, refreshData }) => {
             disabled={isSubmitting}
           >
             {isSubmitting ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                جاري الإضافة...
-              </>
+              <Loading variant="button" text="جاري الإضافة..." />
             ) : (
               'إضافة'
             )}

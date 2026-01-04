@@ -9,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Empty } from '@/components/ui/empty';
 import { Mail, Phone } from 'lucide-react';
 
 const getStatusLabel = (status) => {
@@ -155,9 +156,7 @@ const ViewParentDialog = ({ open, onOpenChange, user }) => {
                   </div>
                 ))
               ) : (
-                <p className="text-sm text-muted-foreground text-center py-8">
-                  لا توجد أطفال مسجلين
-                </p>
+                <Empty variant="children" className="py-4" />
               )}
             </div>
           </div>

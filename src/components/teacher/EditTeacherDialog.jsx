@@ -21,7 +21,7 @@ import {
 import { updateTeacher } from '@/services/admin';
 import { EditTeacherSchema } from '@/schemas/admin.schema';
 import toast from 'react-hot-toast';
-import { Loader2 } from 'lucide-react';
+import { Loading } from '@/components/ui/loading';
 
 const EditTeacherDialog = ({ open, onOpenChange, teacher, refreshData }) => {
   const [formData, setFormData] = useState({
@@ -160,10 +160,7 @@ const EditTeacherDialog = ({ open, onOpenChange, teacher, refreshData }) => {
             disabled={isSubmitting}
           >
             {isSubmitting ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                جاري التحديث...
-              </>
+              <Loading variant="button" text="جاري التحديث..." />
             ) : (
               'حفظ التغييرات'
             )}

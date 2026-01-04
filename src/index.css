@@ -2,33 +2,33 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Playful & Colorful Child Care Platform - Purple Theme
+/* Playful & Colorful Child Care Platform - Blue Theme
    All colors MUST be HSL.
 */
 
 @layer base {
   :root {
-    /* Purple playful theme */
-    --background: 270 30% 99%;
-    --foreground: 270 50% 15%;
+    /* Blue playful theme */
+    --background: 210 30% 99%;
+    --foreground: 210 50% 15%;
 
     --card: 0 0% 100%;
-    --card-foreground: 270 50% 15%;
+    --card-foreground: 210 50% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 270 50% 15%;
+    --popover-foreground: 210 50% 15%;
 
-    /* Main purple */
-    --primary: 270 70% 60%;
+    /* Main blue */
+    --primary: 210 70% 60%;
     --primary-foreground: 0 0% 100%;
 
-    /* Soft lavender */
-    --secondary: 270 40% 95%;
-    --secondary-foreground: 270 50% 25%;
+    /* Soft blue */
+    --secondary: 210 40% 95%;
+    --secondary-foreground: 210 50% 25%;
 
-    /* Light purple muted */
-    --muted: 270 25% 94%;
-    --muted-foreground: 270 20% 45%;
+    /* Light blue muted */
+    --muted: 210 25% 94%;
+    --muted-foreground: 210 20% 45%;
 
     /* Soft pink accent */
     --accent: 330 70% 92%;
@@ -37,21 +37,21 @@
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 270 30% 88%;
-    --input: 270 30% 88%;
-    --ring: 270 70% 60%;
+    --border: 210 30% 88%;
+    --input: 210 30% 88%;
+    --ring: 210 70% 60%;
 
     --radius: 1rem;
 
-    /* Sidebar - deeper purple */
-    --sidebar-background: 270 45% 98%;
-    --sidebar-foreground: 270 40% 25%;
-    --sidebar-primary: 270 70% 55%;
+    /* Sidebar - deeper blue */
+    --sidebar-background: 210 45% 98%;
+    --sidebar-foreground: 210 40% 25%;
+    --sidebar-primary: 210 70% 55%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 270 50% 94%;
-    --sidebar-accent-foreground: 270 50% 25%;
-    --sidebar-border: 270 30% 90%;
-    --sidebar-ring: 270 70% 60%;
+    --sidebar-accent: 210 50% 94%;
+    --sidebar-accent-foreground: 210 50% 25%;
+    --sidebar-border: 210 30% 90%;
+    --sidebar-ring: 210 70% 60%;
 
     /* Custom playful colors */
     --success: 160 70% 45%;
@@ -68,8 +68,8 @@
     --peach-foreground: 20 60% 35%;
     --sky: 200 80% 92%;
     --sky-foreground: 200 70% 35%;
-    --lavender: 270 50% 92%;
-    --lavender-foreground: 270 50% 35%;
+    --lavender: 210 50% 92%;
+    --lavender-foreground: 210 50% 35%;
 
     /* Admin theme - slate/blue */
     --admin: 220 60% 50%;
@@ -83,23 +83,23 @@
   }
 
   .dark {
-    --background: 270 30% 8%;
-    --foreground: 270 20% 95%;
+    --background: 210 30% 8%;
+    --foreground: 210 20% 95%;
 
-    --card: 270 30% 12%;
-    --card-foreground: 270 20% 95%;
+    --card: 210 30% 12%;
+    --card-foreground: 210 20% 95%;
 
-    --popover: 270 30% 12%;
-    --popover-foreground: 270 20% 95%;
+    --popover: 210 30% 12%;
+    --popover-foreground: 210 20% 95%;
 
-    --primary: 270 70% 65%;
-    --primary-foreground: 270 50% 10%;
+    --primary: 210 70% 65%;
+    --primary-foreground: 210 50% 10%;
 
-    --secondary: 270 30% 18%;
-    --secondary-foreground: 270 20% 90%;
+    --secondary: 210 30% 18%;
+    --secondary-foreground: 210 20% 90%;
 
-    --muted: 270 25% 18%;
-    --muted-foreground: 270 15% 60%;
+    --muted: 210 25% 18%;
+    --muted-foreground: 210 15% 60%;
 
     --accent: 330 50% 25%;
     --accent-foreground: 330 70% 85%;
@@ -107,18 +107,18 @@
     --destructive: 0 70% 45%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 270 25% 20%;
-    --input: 270 25% 20%;
-    --ring: 270 70% 65%;
+    --border: 210 25% 20%;
+    --input: 210 25% 20%;
+    --ring: 210 70% 65%;
 
-    --sidebar-background: 270 30% 10%;
-    --sidebar-foreground: 270 20% 90%;
-    --sidebar-primary: 270 70% 65%;
+    --sidebar-background: 210 30% 10%;
+    --sidebar-foreground: 210 20% 90%;
+    --sidebar-primary: 210 70% 65%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 270 30% 18%;
-    --sidebar-accent-foreground: 270 20% 90%;
-    --sidebar-border: 270 25% 18%;
-    --sidebar-ring: 270 70% 65%;
+    --sidebar-accent: 210 30% 18%;
+    --sidebar-accent-foreground: 210 20% 90%;
+    --sidebar-border: 210 25% 18%;
+    --sidebar-ring: 210 70% 65%;
 
     --success: 160 60% 40%;
     --success-foreground: 0 0% 100%;
@@ -133,8 +133,8 @@
     --peach-foreground: 20 60% 80%;
     --sky: 200 50% 20%;
     --sky-foreground: 200 60% 80%;
-    --lavender: 270 40% 20%;
-    --lavender-foreground: 270 50% 80%;
+    --lavender: 210 40% 20%;
+    --lavender-foreground: 210 50% 80%;
 
     /* Admin theme - slate/blue dark */
     --admin: 220 60% 60%;

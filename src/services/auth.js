@@ -24,7 +24,6 @@ export const Login = async (
     {
       onStart,
       onSuccess: (data) => {
-        api.setAuthToken(data.token); // <-- token now persists in localStorage
         if (onSuccess) onSuccess(data);
       },
       onError,

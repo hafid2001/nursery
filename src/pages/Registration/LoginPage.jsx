@@ -117,7 +117,7 @@ const LoginPage = () => {
           disabled={loading}
         >
           {loading && (
-            <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
           )}
           تسجيل الدخول
         </Button>

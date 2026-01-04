@@ -30,6 +30,7 @@ import {
   Building2,
   X,
 } from 'lucide-react';
+import { Loading } from '@/components/ui/loading';
 import { getTeacherList } from '@/services/admin';
 import AddTeacherDialog from '@/components/teacher/AddTeacherDialog';
 import ViewTeacherDialog from '@/components/teacher/ViewTeacherDialog';
@@ -81,7 +82,6 @@ const AdminTeachers = () => {
         },
         onError: () => {
           setTeachers([]);
-          toast.error('فشل في تحميل قائمة المعلمات');
           setHasMore(false);
         },
         onFinal: () => {
@@ -313,7 +313,11 @@ const AdminTeachers = () => {
               variant="outline"
               className="w-32"
             >
-              {loading ? 'جاري التحميل...' : 'تحميل المزيد'}
+              {loading ? (
+                <Loading variant="button" text="جاري التحميل..." />
+              ) : (
+                'تحميل المزيد'
+              )}
             </Button>
           </div>
         )}

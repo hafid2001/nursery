@@ -19,7 +19,7 @@ import {
 import { updateClassroom } from '@/services/admin';
 import { ClassroomSchema } from '@/schemas/admin.schema';
 import toast from 'react-hot-toast';
-import { Loader2 } from 'lucide-react';
+import { Loading } from '@/components/ui/loading';
 
 const EditClassroomDialog = ({
   open,
@@ -124,7 +124,7 @@ const EditClassroomDialog = ({
             إلغاء
           </Button>
           <Button onClick={handleSubmit} disabled={isSubmitting}>
-            {isSubmitting ? <Loader2 className="animate-spin" /> : 'حفظ'}
+            {isSubmitting ? <Loading variant="button" text="جاري الحفظ..." /> : 'حفظ'}
           </Button>
         </DialogFooter>
       </DialogContent>

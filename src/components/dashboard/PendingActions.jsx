@@ -4,6 +4,7 @@ import { getPendingActions } from '@/services/admin';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertCircle, Clock, Bell, CheckCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Empty } from '@/components/ui/empty';
 import toast from 'react-hot-toast';
 
 const PendingActions = () => {
@@ -100,13 +101,7 @@ const PendingActions = () => {
             ))}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <div className="rounded-full bg-muted p-4 mb-4">
-              <CheckCircle className="w-8 h-8 text-muted-foreground" />
-            </div>
-            <p className="text-sm font-medium text-muted-foreground mb-1">لا توجد إجراءات معلقة حاليًا!</p>
-            <p className="text-xs text-muted-foreground">كل شيء منظم في الوقت الحالي</p>
-          </div>
+          <Empty variant="pending-actions" />
         )}
       </CardContent>
     </Card>

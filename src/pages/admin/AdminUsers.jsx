@@ -28,6 +28,8 @@ import {
   Eye,
   X,
 } from 'lucide-react';
+import { Loading } from '@/components/ui/loading';
+import { Empty } from '@/components/ui/empty';
 import { addParent, getParentList, approve } from '@/services/admin';
 import AddParentDialog from '@/components/parent/AddParentDialog';
 import ViewParentDialog from '@/components/parent/ViewParentDialog';
@@ -98,17 +100,16 @@ const AdminUsers = () => {
       getParentList(statusFilter, targetPage, {
         onSuccess: (response) => {
           const newData = response.data || [];
-
+          console.log(newData)
           if (shouldAppend) {
             setUsers((prev) => [...prev, ...newData]);
           } else {
             setUsers(newData);
           }
-          setHasMore(newData.length > 0);
+          setHasMore(response.currentPage < response.totalPages);
         },
         onError: () => {
           setUsers([]);
-          toast.error('فشل في تحميل قائمة أولياء الأمور');
         },
         onFinal: () => setLoading(false),
       });
@@ -376,9 +377,7 @@ const AdminUsers = () => {
             </Table>
 
             {!loading && filteredUsers.length === 0 && (
-              <div className="py-10 text-center text-muted-foreground">
-                لا يوجد نتائج.
-              </div>
+              <Empty variant="search" />
             )}
           </CardContent>
         </Card>
@@ -392,7 +391,11 @@ const AdminUsers = () => {
               variant="outline"
               className="w-32"
             >
-              {loading ? 'جاري التحميل...' : 'تحميل المزيد'}
+              {loading ? (
+                <Loading variant="button" text="تحميل المزيد" />
+              ) : (
+                'تحميل المزيد'
+              )}
             </Button>
           </div>
         )}

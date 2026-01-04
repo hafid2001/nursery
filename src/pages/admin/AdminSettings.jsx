@@ -29,8 +29,8 @@ import {
   Bell,
   Shield,
   Save,
-  Loader2,
 } from 'lucide-react';
+import { Loading } from '@/components/ui/loading';
 
 const AdminSettings = () => {
   const { toast } = useToast();
@@ -364,10 +364,7 @@ const AdminSettings = () => {
             disabled={isSaving}
           >
             {isSaving ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                جاري الحفظ...
-              </>
+              <Loading variant="button" text="جاري الحفظ..." />
             ) : (
               <>
                 <Save className="w-4 h-4" />

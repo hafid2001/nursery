@@ -19,7 +19,7 @@ import {
 import { addClassroom } from '@/services/admin';
 import { ClassroomSchema } from '@/schemas/admin.schema';
 import toast from 'react-hot-toast';
-import { Loader2 } from 'lucide-react';
+import { Loading } from '@/components/ui/loading';
 
 const INITIAL_STATE = {
   name: '',
@@ -150,7 +150,7 @@ const AddClassroomDialog = ({ open, onOpenChange, refreshData }) => {
             onClick={handleSubmit}
             disabled={isSubmitting}
           >
-            {isSubmitting ? <Loader2 className="animate-spin" /> : 'إضافة'}
+            {isSubmitting ? <Loading variant="button" text="جاري الإضافة..." /> : 'إضافة'}
           </Button>
         </DialogFooter>
       </DialogContent>

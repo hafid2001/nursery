@@ -466,7 +466,7 @@ const ParentRegistration = () => {
               <Button onClick={handleSubmit} disabled={loading}>
                 {loading ? (
                   <span className="flex items-center gap-2">
-                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                     جاري الإرسال
                   </span>
                 ) : (
