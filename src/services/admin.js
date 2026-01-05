@@ -152,27 +152,15 @@ export const updateTeacher = async (
 export const getClassroomList = async (
   { onStart, onSuccess, onError, onFinal } = {}
 ) => {
-  console.log("getClassroomList called");
   return api.request(
     `/admin/classroom`,
     {
-      onStart: () => { console.log("API request started for classrooms"); onStart && onStart(); },
+      onStart,
       onSuccess: (data) => {
-        console.log("API request successful for classrooms, raw data:", data);
-        const transformedData = data.data.map((classroom) => ({
-          id: classroom.id,
-          name: classroom.name,
-          capacity: classroom.capacity,
-          enrolled: classroom.current_enrollment,
-          ageGroup: "N/A", // Placeholder, as ageGroup is not in backend response
-          teacher : classroom.teacher,
-          children: classroom.children, // Pass children directly
-        }));
-        console.log("Transformed classrooms data:", transformedData);
-        onSuccess(transformedData);
+        onSuccess(data.data);
       },
-      onError: (err) => { console.error("API request failed for classrooms:", err); onError && onError(err); },
-      onFinal: () => { console.log("API request finished for classrooms"); onFinal && onFinal(); },
+      onError,
+      onFinal,
     },
     { method: 'GET' }
   );
@@ -207,7 +195,7 @@ export const updateClassroom = async (
   { onStart, onSuccess, onError, onFinal } = {}
 ) => {
   return api.request(
-    `/admin/classrooms/${classroomId}`,
+    `/admin/classroom/${classroomId}`,
     { onStart, onSuccess, onError, onFinal },
     { method: 'PUT', body: JSON.stringify(payload) }
   );
@@ -241,6 +229,44 @@ export const getPendingActions = async (
     `/stats/admin/pending-actions`,
     { onStart, onSuccess, onError, onFinal },
     { method: 'GET' }
+  );
+};
+
+export const getClassroomStats = async (
+  { onStart, onSuccess, onError, onFinal } = {}
+) => {
+  return api.request(
+    `/stats/admin/classroom`,
+    {
+      onStart,
+      onSuccess: (data) => {
+        onSuccess(data.data);
+      },
+      onError,
+      onFinal,
+    },
+    {
+      method: 'GET',
+    }
+  );
+};
+
+export const getTeacherStats = async (
+  { onStart, onSuccess, onError, onFinal } = {}
+) => {
+  return api.request(
+    `/stats/admin/teacher`,
+    {
+      onStart,
+      onSuccess: (data) => {
+        onSuccess(data.data);
+      },
+      onError,
+      onFinal,
+    },
+    {
+      method: 'GET',
+    }
   );
 };
 

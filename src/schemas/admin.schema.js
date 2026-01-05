@@ -71,5 +71,14 @@ export const ClassroomSchema = z.object({
   name: z.string().min(2, 'اسم الفصل يجب أن يكون حرفين على الأقل'),
   age_group: z.string().min(1, 'يرجى اختيار الفئة العمرية'),
   capacity: z.coerce.number().min(1, 'السعة يجب أن تكون 1 على الأقل'),
-  teacher_name: z.string().min(1, 'يرجى اختيار المعلمة '),
+  teacherId: z.string().min(1, 'يرجى اختيار المعلمة '),
+});
+
+
+export const UpdateClassroomSchema = z.object({
+  id: z.string(),
+  name: z.string().optional(),
+  age_group: z.string().optional(),
+  capacity: z.coerce.number().optional(),
+  teacherId: z.string().optional(),
 });

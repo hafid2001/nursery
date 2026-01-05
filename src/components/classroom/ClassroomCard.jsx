@@ -35,7 +35,7 @@ const ClassroomCard = ({ classroom, onEdit, onViewStudents, openSettings, openSt
             <div>
               <CardTitle className="text-lg">{classroom.name}</CardTitle>
               <Badge variant="outline" className="mt-1">
-                {classroom.ageGroup}
+                سعة: {classroom.capacity}
               </Badge>
             </div>
           </div>

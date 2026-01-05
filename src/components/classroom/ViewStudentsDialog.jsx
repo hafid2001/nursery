@@ -11,7 +11,8 @@ import { Button } from '@/components/ui/button';
 import { Loading } from '@/components/ui/loading';
 import { Empty } from '@/components/ui/empty';
 
-const ViewStudentsDialog = ({ open, onOpenChange, classroom, students }) => {
+const ViewStudentsDialog = ({ open, onOpenChange, classroom }) => {
+  const students = classroom?.children || [];
   const loading = false; // Students are passed directly, so no internal loading state
 
   return (
@@ -28,20 +29,25 @@ const ViewStudentsDialog = ({ open, onOpenChange, classroom, students }) => {
             <Loading variant="page" text="جاري تحميل الطلاب..." />
           ) : (
             <div className="space-y-2 max-h-[300px] overflow-y-auto">
-              {(students || []).map((student, index) => (
+              {students.map((student, index) => (
                 <div
-                  key={index}
+                  key={student.child_id || index}
                   className="flex items-center gap-3 p-3 rounded-lg bg-muted/50"
                 >
                   <Avatar className="h-8 w-8">
                     <AvatarFallback className="bg-admin-accent text-xs">
-                      {student.name[0]}
+                      {student.full_name[0]}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="font-medium">{student.name}</span>
+                  <div className="flex-1">
+                    <span className="font-medium">{student.full_name}</span>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      العمر: {student.age} سنوات • {student.gender === 'male' ? 'ذكر' : 'أنثى'}
+                    </div>
+                  </div>
                 </div>
               ))}
-              {(students || []).length === 0 && (
+              {students.length === 0 && (
                 <Empty variant="students" className="py-6" />
               )}
             </div>

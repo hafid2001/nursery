@@ -1,5 +1,5 @@
 import { ParentLayout } from '@/components/layout/ParentLayout.jsx';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   FileText,
   Calendar,
@@ -13,6 +13,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -22,19 +23,24 @@ import {
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { dailyReports } from '../../mocks/parent';
+import { Loading } from '@/components/ui/loading';
+import { ParentEmptyState } from '@/components/parent/ParentEmptyState';
+import { ParentServices } from '@/schemas/parent.schema';
+import { useToast } from '@/hooks/use-toast';
 
-const getMoodEmoji = () =>
+const getMoodEmoji = (mood) =>
   ({ سعيد: '😊', هادئ: '😌', نشيط: '🤩', متعب: '😴', منزعج: '😢' })[mood] ||
   '😊';
-const getMealStatusColor = () =>
+
+const getMealStatusColor = (status) =>
   ({
     أحبها: 'bg-success text-success-foreground',
     'أكل جيداً': 'bg-mint text-mint-foreground',
     'أكل قليلاً': 'bg-warning text-warning-foreground',
     'لم يأكل': 'bg-destructive text-destructive-foreground',
   })[status] || 'bg-secondary text-secondary-foreground';
-const getNapQualityColor = () =>
+
+const getNapQualityColor = (quality) =>
   ({
     'نام جيداً': 'bg-success text-success-foreground',
     'نوم متقطع': 'bg-warning text-warning-foreground',
@@ -42,9 +48,126 @@ const getNapQualityColor = () =>
   })[quality] || 'bg-secondary text-secondary-foreground';
 
 export default function DailyReports() {
-  const [selectedReport, setSelectedReport] =
-    (useState < typeof dailyReports[0]) | (null > null);
+  const { toast } = useToast();
+  const [selectedReport, setSelectedReport] = useState(null);
+  const [reports, setReports] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMorePages, setHasMorePages] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    fetchDailyReports(1, false);
+  }, []);
+
+  const fetchDailyReports = async (page = 1, append = false) => {
+    try {
+      if (page === 1) {
+        setLoading(true);
+      } else {
+        setLoadingMore(true);
+      }
+      setError(null);
+
+      await ParentServices.getDailyReports(page, {
+        onSuccess: (response) => {
+          const newReports = response.data || [];
+          if (append) {
+            setReports(prev => [...prev, ...newReports]);
+          } else {
+            setReports(newReports);
+          }
+
+          // Check if there are more pages (assuming 5 items per page from backend)
+          setHasMorePages(newReports.length === 5);
+          setCurrentPage(page);
+        },
+        onError: (error) => {
+          console.error('Failed to fetch daily reports:', error);
+          setError(error);
+          toast({
+            title: 'خطأ في تحميل البيانات',
+            description: 'حدث خطأ أثناء تحميل التقارير اليومية. يرجى المحاولة مرة أخرى.',
+            variant: 'destructive',
+          });
+        },
+      });
+    } catch (err) {
+      console.error('Unexpected error:', err);
+      setError(err);
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  };
+
+  const loadMoreReports = () => {
+    if (!loadingMore && hasMorePages) {
+      fetchDailyReports(currentPage + 1, true);
+    }
+  };
+
+  const filteredReports = reports.filter(report =>
+    !searchQuery ||
+    new Date(report.report_date).toLocaleDateString('ar-SA').includes(searchQuery) ||
+    report.mood?.includes(searchQuery)
+  );
+
+  if (loading) {
+    return (
+      <ParentLayout>
+        <div className="space-y-6">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold font-display text-foreground">
+              التقارير اليومية 📋
+            </h1>
+            <p className="text-muted-foreground">
+              شاهد كيف قضى أطفالك يومهم في الحضانة
+            </p>
+          </div>
+          <Loading variant="page" text="جاري تحميل التقارير اليومية..." />
+        </div>
+      </ParentLayout>
+    );
+  }
+
+  if (error || reports.length === 0) {
+    return (
+      <ParentLayout>
+        <div className="space-y-6">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold font-display text-foreground">
+              التقارير اليومية 📋
+            </h1>
+            <p className="text-muted-foreground">
+              شاهد كيف قضى أطفالك يومهم في الحضانة
+            </p>
+          </div>
+          <div className="relative mb-4">
+            <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="البحث بالتاريخ..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pr-10 rounded-full w-64"
+            />
+          </div>
+          <ParentEmptyState
+            type="daily-reports"
+            action={
+              error ? (
+                <Button onClick={() => fetchDailyReports(1, false)} variant="outline">
+                  إعادة المحاولة
+                </Button>
+              ) : null
+            }
+          />
+        </div>
+      </ParentLayout>
+    );
+  }
 
   return (
     <ParentLayout>
@@ -55,7 +178,7 @@ export default function DailyReports() {
               التقارير اليومية 📋
             </h1>
             <p className="text-muted-foreground">
-              شاهد كيف قضت ليلى يومها في الحضانة
+              شاهد كيف قضى أطفالك يومهم في الحضانة
             </p>
           </div>
           <div className="relative">
@@ -70,7 +193,7 @@ export default function DailyReports() {
         </div>
 
         <div className="grid gap-4">
-          {dailyReports.map((report) => (
+          {filteredReports.map((report) => (
             <Card
               key={report.id}
               className="rounded-2xl border-0 shadow-md hover-lift cursor-pointer"
@@ -84,7 +207,7 @@ export default function DailyReports() {
                     </div>
                     <div>
                       <h3 className="font-semibold text-lg">
-                        {new Date(report.date).toLocaleDateString('ar-SA', {
+                        {new Date(report.report_date).toLocaleDateString('ar-SA', {
                           weekday: 'long',
                           month: 'long',
                           day: 'numeric',
@@ -95,14 +218,16 @@ export default function DailyReports() {
                           variant="secondary"
                           className="rounded-full text-xs"
                         >
-                          {getMoodEmoji(report.mood)} {report.mood}
+                          {getMoodEmoji(report.mood)} {report.mood || 'غير محدد'}
                         </Badge>
-                        <Badge
-                          className={`rounded-full text-xs ${getNapQualityColor(report.nap.quality)}`}
-                        >
-                          <Moon className="h-3 w-3 ml-1" />
-                          {report.nap.quality}
-                        </Badge>
+                        {report.nap && (
+                          <Badge
+                            className={`rounded-full text-xs ${getNapQualityColor(report.nap.quality)}`}
+                          >
+                            <Moon className="h-3 w-3 ml-1" />
+                            {report.nap.quality || 'غير محدد'}
+                          </Badge>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -112,6 +237,26 @@ export default function DailyReports() {
             </Card>
           ))}
         </div>
+
+        {hasMorePages && (
+          <div className="flex justify-center">
+            <Button
+              onClick={loadMoreReports}
+              disabled={loadingMore}
+              variant="outline"
+              className="rounded-full"
+            >
+              {loadingMore ? (
+                <>
+                  <Loading size="sm" />
+                  جاري تحميل المزيد...
+                </>
+              ) : (
+                'تحميل المزيد'
+              )}
+            </Button>
+          </div>
+        )}
 
         <Dialog
           open={!!selectedReport}
@@ -125,7 +270,7 @@ export default function DailyReports() {
               </DialogTitle>
               <DialogDescription>
                 {selectedReport &&
-                  new Date(selectedReport.date).toLocaleDateString('ar-SA', {
+                  new Date(selectedReport.report_date).toLocaleDateString('ar-SA', {
                     weekday: 'long',
                     year: 'numeric',
                     month: 'long',
@@ -150,7 +295,7 @@ export default function DailyReports() {
                       الوجبات
                     </h4>
                     <div className="space-y-3">
-                      {Object.entries(selectedReport.meals).map(
+                      {selectedReport.meals ? Object.entries(selectedReport.meals).map(
                         ([meal, data]) => (
                           <div
                             key={meal}
@@ -175,6 +320,8 @@ export default function DailyReports() {
                             </p>
                           </div>
                         )
+                      ) : (
+                        <p className="text-muted-foreground text-center">لا توجد معلومات عن الوجبات</p>
                       )}
                     </div>
                   </div>
@@ -191,15 +338,16 @@ export default function DailyReports() {
                             المدة
                           </p>
                           <p className="font-semibold text-lg">
-                            {selectedReport.nap.startTime} -{' '}
-                            {selectedReport.nap.endTime}
+                            {selectedReport.nap ? `${selectedReport.nap.start_time || 'غير محدد'} - ${selectedReport.nap.end_time || 'غير محدد'}` : 'غير محدد'}
                           </p>
                         </div>
-                        <Badge
-                          className={`rounded-full ${getNapQualityColor(selectedReport.nap.quality)}`}
-                        >
-                          {selectedReport.nap.quality}
-                        </Badge>
+                        {selectedReport.nap && (
+                          <Badge
+                            className={`rounded-full ${getNapQualityColor(selectedReport.nap.quality)}`}
+                          >
+                            {selectedReport.nap.quality}
+                          </Badge>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -210,15 +358,19 @@ export default function DailyReports() {
                       الأنشطة
                     </h4>
                     <div className="flex flex-wrap gap-2">
-                      {selectedReport.activities.map((activity, index) => (
-                        <Badge
-                          key={index}
-                          variant="outline"
-                          className="rounded-full px-4 py-2 bg-mint/50 border-mint"
-                        >
-                          {activity}
-                        </Badge>
-                      ))}
+                      {selectedReport.activities && selectedReport.activities.length > 0 ? (
+                        selectedReport.activities.map((activity, index) => (
+                          <Badge
+                            key={index}
+                            variant="outline"
+                            className="rounded-full px-4 py-2 bg-mint/50 border-mint"
+                          >
+                            {activity}
+                          </Badge>
+                        ))
+                      ) : (
+                        <p className="text-muted-foreground">لا توجد أنشطة مسجلة</p>
+                      )}
                     </div>
                   </div>
                   <Separator />
@@ -233,7 +385,7 @@ export default function DailyReports() {
                           السلوك
                         </p>
                         <p className="text-foreground">
-                          {selectedReport.behaviorNotes}
+                          {selectedReport.behavior_notes || 'لا توجد ملاحظات سلوكية'}
                         </p>
                       </div>
                       <div className="p-4 rounded-xl bg-sky">
@@ -241,7 +393,7 @@ export default function DailyReports() {
                           ملاحظات عامة
                         </p>
                         <p className="text-foreground">
-                          {selectedReport.teacherNotes}
+                          {selectedReport.teacher_notes || 'لا توجد ملاحظات عامة'}
                         </p>
                       </div>
                     </div>

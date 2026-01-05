@@ -168,7 +168,7 @@ const AdminTeachers = () => {
           </Button>
         </div>
 
-        <TeacherStats teachers={teachers} />
+        <TeacherStats />
 
         {/* Search & Filter */}
         <Card>

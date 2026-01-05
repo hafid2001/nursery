@@ -3,23 +3,16 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { updateClassroom } from '@/services/admin';
-import { ClassroomSchema } from '@/schemas/admin.schema';
+import { updateClassroom, getTeacherList } from '@/services/admin';
 import toast from 'react-hot-toast';
 import { Loading } from '@/components/ui/loading';
+import { UpdateClassroomSchema } from '@/schemas/admin.schema';
 
 const EditClassroomDialog = ({
   open,
@@ -31,36 +24,109 @@ const EditClassroomDialog = ({
     name: '',
     age_group: '',
     capacity: '',
-    teacher_name: '',
+    teacherId: '',
   });
+  const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [teachers, setTeachers] = useState([]);
+  const [isLoadingTeachers, setIsLoadingTeachers] = useState(false);
 
   useEffect(() => {
-    if (classroom) {
+    const fetchTeachers = async () => {
+      setIsLoadingTeachers(true);
+      await getTeacherList('ACTIVE', 1, {
+        onSuccess: (data) => {
+          const uniqueTeachers = (data.data || []).filter((teacher, index, self) =>
+            index === self.findIndex(t => t.teacher_id === teacher.teacher_id)
+          );
+          setTeachers(uniqueTeachers);
+        },
+        onError: () => {
+          toast.error('فشل في تحميل قائمة المعلمات');
+        },
+        onFinal: () => setIsLoadingTeachers(false),
+      });
+    };
+
+    if (open) {
+      fetchTeachers();
+    } else {
+      // Reset form state when dialog closes
+      setFormData({
+        name: '',
+        age_group: '',
+        capacity: '',
+        teacherId: '',
+      });
+      setErrors({});
+      setIsSubmitting(false);
+      setTeachers([]);
+    }
+  }, [open]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      setFormData({
+        name: '',
+        age_group: '',
+        capacity: '',
+        teacherId: '',
+      });
+      setErrors({});
+      setIsSubmitting(false);
+      setTeachers([]);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (classroom && teachers.length > 0 && open) {
       setFormData({
         name: classroom.name || '',
         age_group: classroom.ageGroup || '',
         capacity: classroom.capacity || '',
-        teacher_name: classroom.teacher.name || '',
+        teacherId: classroom.teacher?.teacher_id || '',
       });
+      setErrors({});
     }
-  }, [classroom]);
+  }, [classroom, teachers, open]);
 
   const handleSubmit = async () => {
-    try {
-      const validatedData = ClassroomSchema.parse(formData);
-      setIsSubmitting(true);
-      await updateClassroom(classroom.id, validatedData, {
-        onSuccess: () => {
-          toast.success('تم تحديث البيانات');
-          onOpenChange(false);
-          refreshData();
-        },
-        onFinal: () => setIsSubmitting(false),
+    setErrors({});
+    setIsSubmitting(true);
+
+    const dataToSend = {
+      id: classroom.id,
+      ...Object.fromEntries(
+        Object.entries(formData).filter(([key, value]) =>
+          value !== '' && value !== null && value !== undefined
+        )
+      )
+    };
+    const validatedData = UpdateClassroomSchema.safeParse(dataToSend);
+
+    if (!validatedData.success) {
+      const formattedErrors = {};
+      validatedData.error.issues.forEach((issue) => {
+        formattedErrors[issue.path[0]] = issue.message;
       });
-    } catch (err) {
-      toast.error('يرجى التحقق من البيانات المدخلة');
+      setErrors(formattedErrors);
+      setIsSubmitting(false);
+      return;
     }
+
+    console.log(classroom.id)
+    await updateClassroom(classroom.id, validatedData.data, {
+      onSuccess: () => {
+        toast.success('تم تحديث البيانات');
+        onOpenChange(false);
+        refreshData();
+      },
+      onError : () => {
+        toast.error('يرجى التحقق من البيانات المدخلة');
+      },
+      onFinal: () => setIsSubmitting(false),
+    });
   };
 
   return (
@@ -77,27 +143,35 @@ const EditClassroomDialog = ({
               onChange={(e) =>
                 setFormData({ ...formData, name: e.target.value })
               }
+              className={errors.name ? 'border-destructive' : ''}
             />
+            {errors.name && (
+              <p className="text-sm text-destructive">{errors.name}</p>
+            )}
           </div>
           <div className="space-y-2">
             <Label>الفئة العمرية</Label>
-            <Select
+            <select
               value={formData.age_group}
-              onValueChange={(v) =>
-                setFormData({ ...formData, age_group: v })
+              onChange={(e) =>
+                setFormData({ ...formData, age_group: e.target.value })
               }
+              className={`flex h-9 w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs transition-[color,box-shadow] placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 ${
+                errors.age_group ? 'border-destructive' : ''
+              }`}
             >
-              <SelectTrigger>
-                <SelectValue placeholder="اختر الفئة" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="0-1 year">0 - 1 سنة</SelectItem>
-                <SelectItem value="1-2 years">1 - 2 سنوات</SelectItem>
-                <SelectItem value="2-3 years">2 - 3 سنوات</SelectItem>
-                <SelectItem value="3-4 years">3 - 4 سنوات</SelectItem>
-                <SelectItem value="4-5 years">4 - 5 سنوات</SelectItem>
-              </SelectContent>
-            </Select>
+              <option value="" disabled>
+                اختر الفئة
+              </option>
+              <option value="0-1 year">0 - 1 سنة</option>
+              <option value="1-2 years">1 - 2 سنوات</option>
+              <option value="2-3 years">2 - 3 سنوات</option>
+              <option value="3-4 years">3 - 4 سنوات</option>
+              <option value="4-5 years">4 - 5 سنوات</option>
+            </select>
+            {errors.age_group && (
+              <p className="text-sm text-destructive">{errors.age_group}</p>
+            )}
           </div>
           <div className="space-y-2">
             <Label>السعة القصوى</Label>
@@ -107,16 +181,44 @@ const EditClassroomDialog = ({
               onChange={(e) =>
                 setFormData({ ...formData, capacity: Number(e.target.value) })
               }
+              className={errors.capacity ? 'border-destructive' : ''}
             />
+            {errors.capacity && (
+              <p className="text-sm text-destructive">{errors.capacity}</p>
+            )}
           </div>
           <div className="space-y-2">
             <Label>المعلمة الرئيسية</Label>
-            <Input
-              value={formData.teacher_name}
+            <select
+              value={formData.teacherId}
               onChange={(e) =>
-                setFormData({ ...formData, teacher_name: e.target.value })
+                setFormData({ ...formData, teacherId: e.target.value })
               }
-            />
+              disabled={isLoadingTeachers}
+              className={`flex h-9 w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs transition-[color,box-shadow] placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 ${
+                errors.teacherId ? 'border-destructive' : ''
+              }`}
+            >
+              <option value="" disabled>
+                {isLoadingTeachers ? "جاري التحميل..." : "اختر المعلمة"}
+              </option>
+              {teachers.length > 0 ? (
+                teachers.map((teacher) => (
+                  <option key={teacher.teacher_id} value={teacher.teacher_id}>
+                    {teacher.full_name}
+                  </option>
+                ))
+              ) : (
+                !isLoadingTeachers && (
+                  <option value="" disabled>
+                    لا توجد معلمات متاحة
+                  </option>
+                )
+              )}
+            </select>
+            {errors.teacherId && (
+              <p className="text-sm text-destructive">{errors.teacherId}</p>
+            )}
           </div>
         </div>
         <DialogFooter>
