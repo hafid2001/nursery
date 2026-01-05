@@ -107,15 +107,7 @@ const App = () => (
               }
             />
 
-            {/*  
-            <Route
-              path="/teacher"
-              element={
-                <RoleBasedRoute allowedRoles={['teacher']}>
-                  <TeacherDashboard />
-                </RoleBasedRoute>
-              }
-            />
+
             <Route
               path="/teacher/classroom"
               element={
@@ -148,15 +140,7 @@ const App = () => (
                 </RoleBasedRoute>
               }
             />
-            <Route
-              path="/teacher/messages"
-              element={
-                <RoleBasedRoute allowedRoles={['teacher']}>
-                  <TeacherMessages />
-                </RoleBasedRoute>
-              }
-            />
-            */}
+
             {/* Admin Routes */}
             <Route
               path="/admin"
