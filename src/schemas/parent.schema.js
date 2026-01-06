@@ -53,8 +53,8 @@ export const ParentServices = {
   },
 
   // Get progress reports with pagination for the authenticated parent
-  getProgressReports: async (page = 1, callbacks = {}) => {
-    return api.request(`/parent/progress-reports?page=${page}`, {
+  getProgressReports: async (callbacks = {}) => {
+    return api.request(`/parent/progress-reports`, {
       onStart: callbacks.onStart,
       onSuccess: callbacks.onSuccess,
       onError: callbacks.onError,
@@ -87,6 +87,18 @@ export const ParentServices = {
     return api.request(`/parent/${childId}/request-child-profile-change`, {
       method: 'POST',
       body: JSON.stringify({ field, newValue }),
+      onStart: callbacks.onStart,
+      onSuccess: callbacks.onSuccess,
+      onError: callbacks.onError,
+      onFinal: callbacks.onFinal,
+    });
+  },
+
+  // Create checkout session for payments
+  createCheckoutSession: async (payload, callbacks = {}) => {
+    return api.request('/parent/checkout-session', {
+      method: 'POST',
+      body: JSON.stringify(payload),
       onStart: callbacks.onStart,
       onSuccess: callbacks.onSuccess,
       onError: callbacks.onError,

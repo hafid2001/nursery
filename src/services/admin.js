@@ -212,6 +212,17 @@ export const getDashboardStats = async (
 };
 
 
+export const getAdminRevenueStats = async (
+  { onStart, onSuccess, onError, onFinal } = {}
+) => {
+  return api.request(
+    `/stats/admin/revenue`,
+    { onStart, onSuccess, onError, onFinal },
+    { method: 'GET' }
+  )
+}
+
+
 export const getRecentActivities = async (
   { onStart, onSuccess, onError, onFinal } = {}
 ) => {
@@ -270,7 +281,7 @@ export const getTeacherStats = async (
   );
 };
 
-export const getPaymentsList = async (
+export const getParentsSubscriptions = async (
   status,
   page,
   searchQuery,
@@ -292,25 +303,7 @@ export const getPaymentsList = async (
     `/admin/payments?${queryParams.toString()}`,
     {
       onStart,
-      onSuccess: (data) => {
-        const transformedData = data.data.map((payment) => ({
-          id: payment.id,
-          invoiceNumber: payment.invoiceNumber || `INV-${String(payment.id).padStart(3, '0')}`,
-          parentName: payment.parentName,
-          amount: payment.amount,
-          currency: payment.currency,
-          dueDate: payment.dueDate,
-          paymentDate: payment.paymentDate,
-          status: payment.status,
-          paymentMethod: payment.paymentMethod === 'credit_card' ? 'بطاقة ائتمان' : 'تحويل بنكي',
-        }));
-        onSuccess({
-          data: transformedData,
-          totalCount: data.totalCount,
-          currentPage: data.currentPage,
-          totalPages: data.totalPages,
-        });
-      },
+      onSuccess,
       onError,
       onFinal,
     },
@@ -319,3 +312,5 @@ export const getPaymentsList = async (
     }
   );
 };
+
+

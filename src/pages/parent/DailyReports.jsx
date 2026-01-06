@@ -1,5 +1,5 @@
-import { ParentLayout } from '@/components/layout/ParentLayout.jsx';
-import { useState, useEffect } from 'react';
+import { ParentLayout } from "@/components/layout/ParentLayout";
+import { useState, useEffect } from "react";
 import {
   FileText,
   Calendar,
@@ -9,162 +9,157 @@ import {
   MessageCircle,
   ChevronLeft,
   Search,
-} from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
+} from "lucide-react";
+
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
-import { Loading } from '@/components/ui/loading';
-import { ParentEmptyState } from '@/components/parent/ParentEmptyState';
-import { ParentServices } from '@/schemas/parent.schema';
-import { useToast } from '@/hooks/use-toast';
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 
-const getMoodEmoji = (mood) =>
-  ({ سعيد: '😊', هادئ: '😌', نشيط: '🤩', متعب: '😴', منزعج: '😢' })[mood] ||
-  '😊';
+import { ParentLoading } from "@/components/parent/ParentLoading";
+import { ParentEmptyState } from "@/components/parent/ParentEmptyState";
+import { parentServices } from "@/services/parent.schema";
+import toast from "react-hot-toast";
 
-const getMealStatusColor = (status) =>
-  ({
-    أحبها: 'bg-success text-success-foreground',
-    'أكل جيداً': 'bg-mint text-mint-foreground',
-    'أكل قليلاً': 'bg-warning text-warning-foreground',
-    'لم يأكل': 'bg-destructive text-destructive-foreground',
-  })[status] || 'bg-secondary text-secondary-foreground';
+/* =========================
+   Helpers
+========================= */
 
-const getNapQualityColor = (quality) =>
-  ({
-    'نام جيداً': 'bg-success text-success-foreground',
-    'نوم متقطع': 'bg-warning text-warning-foreground',
-    'لم ينم': 'bg-destructive text-destructive-foreground',
-  })[quality] || 'bg-secondary text-secondary-foreground';
+const parseJSON = (value, fallback) => {
+  try {
+    if (!value) return fallback;
+    if (typeof value === "string") return JSON.parse(value);
+    return value;
+  } catch {
+    return fallback;
+  }
+};
+
+
+const parseSleep = (sleep) => {
+  const parsed = parseJSON(sleep, {});
+  return {
+    quality: parsed.quality || "غير محدد",
+    note: parsed.note || "",
+  };
+};
+
+const getSleepLabel = (quality) => {
+  const labels = {
+    good: "نوم جيد",
+    fair: "نوم متوسط",
+    poor: "نوم سيء",
+  };
+  return labels[quality] || quality;
+};
+
+const getSleepColor = (quality) => {
+  const colors = {
+    good: "bg-success text-success-foreground",
+    fair: "bg-warning text-warning-foreground",
+    poor: "bg-destructive text-destructive-foreground",
+  };
+  return colors[quality] || "bg-secondary text-secondary-foreground";
+};
+
+const parseFoodIntake = (foodIntake) => {
+  const parsed = parseJSON(foodIntake, []);
+  return Array.isArray(parsed) ? parsed : [];
+};
+
+const parseBehavior = (behavior) => {
+  const parsed = parseJSON(behavior, {});
+  return {
+    mood: parsed.mood || "عادي",
+    notes: parsed.notes || "",
+  };
+};
+
+/* =========================
+   Component
+========================= */
 
 export default function DailyReports() {
-  const { toast } = useToast();
+  const [dailyReports, setDailyReports] = useState([]);
   const [selectedReport, setSelectedReport] = useState(null);
-  const [reports, setReports] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [hasMorePages, setHasMorePages] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-
-  useEffect(() => {
-    fetchDailyReports(1, false);
-  }, []);
+  const [hasMore, setHasMore] = useState(true);
+  const [error, setError] = useState(null);
 
   const fetchDailyReports = async (page = 1, append = false) => {
     try {
-      if (page === 1) {
-        setLoading(true);
-      } else {
-        setLoadingMore(true);
-      }
-      setError(null);
+      if (!append) setLoading(true);
 
-      await ParentServices.getDailyReports(page, {
+      await parentServices.getDailyReports(page, {
         onSuccess: (response) => {
-          const newReports = response.data || [];
-          if (append) {
-            setReports(prev => [...prev, ...newReports]);
-          } else {
-            setReports(newReports);
-          }
+          const reports = response.data.map((r) => ({
+            id: r.id,
+            date: r.date,
+            activities: Array.isArray(r.activity_level)
+            ? r.activity_level.map(a =>
+                typeof a === "string" ? a : a.name
+              )
+            : [],
+            foodIntake: parseFoodIntake(r.food_intake),
+            sleep: parseSleep(r.sleep_quality),
+            behavior: parseBehavior(r.behavior),
+            generalNotes: r.general_notes || "",
+          }));
 
-          // Check if there are more pages (assuming 5 items per page from backend)
-          setHasMorePages(newReports.length === 5);
-          setCurrentPage(page);
+          setDailyReports((prev) =>
+            append ? [...prev, ...reports] : reports
+          );
+
+          setHasMore(response.data.length === 10);
         },
-        onError: (error) => {
-          console.error('Failed to fetch daily reports:', error);
-          setError(error);
-          toast({
-            title: 'خطأ في تحميل البيانات',
-            description: 'حدث خطأ أثناء تحميل التقارير اليومية. يرجى المحاولة مرة أخرى.',
-            variant: 'destructive',
-          });
+        onError: (err) => {
+          if (err.status === 404) {
+            setDailyReports([]);
+            setHasMore(false);
+          } else {
+            setError("فشل تحميل التقارير");
+            toast.error("فشل تحميل التقارير");
+          }
         },
       });
-    } catch (err) {
-      console.error('Unexpected error:', err);
-      setError(err);
+    } catch {
+      toast.error("خطأ غير متوقع");
     } finally {
       setLoading(false);
-      setLoadingMore(false);
     }
   };
 
-  const loadMoreReports = () => {
-    if (!loadingMore && hasMorePages) {
-      fetchDailyReports(currentPage + 1, true);
-    }
-  };
+  useEffect(() => {
+    fetchDailyReports();
+  }, []);
 
-  const filteredReports = reports.filter(report =>
-    !searchQuery ||
-    new Date(report.report_date).toLocaleDateString('ar-SA').includes(searchQuery) ||
-    report.mood?.includes(searchQuery)
-  );
-
-  if (loading) {
+  if (loading && dailyReports.length === 0) {
     return (
       <ParentLayout>
-        <div className="space-y-6">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold font-display text-foreground">
-              التقارير اليومية 📋
-            </h1>
-            <p className="text-muted-foreground">
-              شاهد كيف قضى أطفالك يومهم في الحضانة
-            </p>
-          </div>
-          <Loading variant="page" text="جاري تحميل التقارير اليومية..." />
-        </div>
+        <ParentLoading variant="page" text="جاري تحميل التقارير..." />
       </ParentLayout>
     );
   }
 
-  if (error || reports.length === 0) {
+  const filteredReports = dailyReports.filter((r) =>
+    r.date.includes(searchQuery)
+  );
+
+  if (!loading && filteredReports.length === 0) {
     return (
       <ParentLayout>
-        <div className="space-y-6">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold font-display text-foreground">
-              التقارير اليومية 📋
-            </h1>
-            <p className="text-muted-foreground">
-              شاهد كيف قضى أطفالك يومهم في الحضانة
-            </p>
-          </div>
-          <div className="relative mb-4">
-            <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="البحث بالتاريخ..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pr-10 rounded-full w-64"
-            />
-          </div>
-          <ParentEmptyState
-            type="daily-reports"
-            action={
-              error ? (
-                <Button onClick={() => fetchDailyReports(1, false)} variant="outline">
-                  إعادة المحاولة
-                </Button>
-              ) : null
-            }
-          />
-        </div>
+        <ParentEmptyState type="daily-reports" />
       </ParentLayout>
     );
   }
@@ -172,237 +167,177 @@ export default function DailyReports() {
   return (
     <ParentLayout>
       <div className="space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold font-display text-foreground">
-              التقارير اليومية 📋
-            </h1>
-            <p className="text-muted-foreground">
-              شاهد كيف قضى أطفالك يومهم في الحضانة
-            </p>
-          </div>
+        {/* Header */}
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl font-bold">التقارير اليومية 📋</h1>
           <div className="relative">
-            <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4" />
             <Input
-              placeholder="البحث بالتاريخ..."
+              className="pr-10 w-64"
+              placeholder="بحث بالتاريخ"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pr-10 rounded-full w-64"
             />
           </div>
         </div>
 
+        {/* Cards */}
         <div className="grid gap-4">
           {filteredReports.map((report) => (
             <Card
               key={report.id}
-              className="rounded-2xl border-0 shadow-md hover-lift cursor-pointer"
               onClick={() => setSelectedReport(report)}
+              className="cursor-pointer hover:shadow-md"
             >
-              <CardContent className="p-4 md:p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="h-14 w-14 rounded-xl bg-lavender flex items-center justify-center">
-                      <Calendar className="h-6 w-6 text-lavender-foreground" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-lg">
-                        {new Date(report.report_date).toLocaleDateString('ar-SA', {
-                          weekday: 'long',
-                          month: 'long',
-                          day: 'numeric',
-                        })}
-                      </h3>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Badge
-                          variant="secondary"
-                          className="rounded-full text-xs"
-                        >
-                          {getMoodEmoji(report.mood)} {report.mood || 'غير محدد'}
-                        </Badge>
-                        {report.nap && (
-                          <Badge
-                            className={`rounded-full text-xs ${getNapQualityColor(report.nap.quality)}`}
-                          >
-                            <Moon className="h-3 w-3 ml-1" />
-                            {report.nap.quality || 'غير محدد'}
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <ChevronLeft className="h-5 w-5 text-muted-foreground" />
+              <CardContent className="p-4 flex items-center justify-between  rounded-2xl">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-primary" />
+                <div>
+                  <p className="font-semibold text-gray-800">
+                    {new Date(report.date).toLocaleDateString("ar-SA-u-nu-latn", {
+                      weekday: 'long',
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    <Activity className="h-3 w-3 inline ml-1" />
+                    {report.activities.length} أنشطة
+                  </p>
                 </div>
-              </CardContent>
+              </div>
+              <ChevronLeft className="text-gray-400" />
+            </CardContent>
             </Card>
           ))}
         </div>
 
-        {hasMorePages && (
-          <div className="flex justify-center">
-            <Button
-              onClick={loadMoreReports}
-              disabled={loadingMore}
-              variant="outline"
-              className="rounded-full"
-            >
-              {loadingMore ? (
-                <>
-                  <Loading size="sm" />
-                  جاري تحميل المزيد...
-                </>
-              ) : (
-                'تحميل المزيد'
-              )}
-            </Button>
-          </div>
-        )}
-
+        {/* Dialog */}
         <Dialog
           open={!!selectedReport}
           onOpenChange={() => setSelectedReport(null)}
         >
-          <DialogContent className="max-w-2xl max-h-[90vh] rounded-2xl">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2 text-xl">
-                <FileText className="h-5 w-5 text-primary" />
-                التقرير اليومي
-              </DialogTitle>
-              <DialogDescription>
-                {selectedReport &&
-                  new Date(selectedReport.report_date).toLocaleDateString('ar-SA', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                  })}
-              </DialogDescription>
-            </DialogHeader>
+          <DialogContent className="max-w-2xl">
             {selectedReport && (
-              <ScrollArea className="max-h-[60vh] pl-4">
-                <div className="space-y-6">
-                  <div className="p-4 rounded-xl bg-gradient-to-r from-lavender to-mint text-center">
-                    <span className="text-4xl">
-                      {getMoodEmoji(selectedReport.mood)}
-                    </span>
-                    <p className="font-semibold mt-2">
-                      المزاج العام: {selectedReport.mood}
-                    </p>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold flex items-center gap-2 mb-3">
-                      <Utensils className="h-4 w-4 text-primary" />
-                      الوجبات
-                    </h4>
-                    <div className="space-y-3">
-                      {selectedReport.meals ? Object.entries(selectedReport.meals).map(
-                        ([meal, data]) => (
-                          <div
-                            key={meal}
-                            className="p-3 rounded-xl bg-secondary/50"
-                          >
-                            <div className="flex items-center justify-between mb-1">
-                              <span className="capitalize font-medium">
-                                {meal === 'breakfast'
-                                  ? 'الفطور'
-                                  : meal === 'lunch'
-                                    ? 'الغداء'
-                                    : 'وجبة خفيفة'}
-                              </span>
-                              <Badge
-                                className={`rounded-full ${getMealStatusColor(data.status)}`}
-                              >
-                                {data.status}
-                              </Badge>
-                            </div>
-                            <p className="text-sm text-muted-foreground">
-                              {data.notes}
-                            </p>
-                          </div>
-                        )
-                      ) : (
-                        <p className="text-muted-foreground text-center">لا توجد معلومات عن الوجبات</p>
-                      )}
-                    </div>
-                  </div>
-                  <Separator />
-                  <div>
-                    <h4 className="font-semibold flex items-center gap-2 mb-3">
-                      <Moon className="h-4 w-4 text-primary" />
-                      وقت القيلولة
-                    </h4>
-                    <div className="p-4 rounded-xl bg-lavender">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm text-lavender-foreground">
-                            المدة
-                          </p>
-                          <p className="font-semibold text-lg">
-                            {selectedReport.nap ? `${selectedReport.nap.start_time || 'غير محدد'} - ${selectedReport.nap.end_time || 'غير محدد'}` : 'غير محدد'}
-                          </p>
-                        </div>
-                        {selectedReport.nap && (
+              <>
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <FileText className="h-5 w-5" />
+                    التقرير اليومي
+                  </DialogTitle>
+                  <DialogDescription>
+                    {new Date(selectedReport.date).toLocaleDateString("ar-SA-u-nu-latn", {
+                      weekday: 'long',
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </DialogDescription>
+                </DialogHeader>
+
+                <ScrollArea className="max-h-[65vh]">
+                  <div className="space-y-6">
+                    {/* Activities */}
+                    <div className="p-4 rounded-xl bg-secondary/20">
+                      <h4 className="font-semibold flex items-center gap-2 mb-3 text-primary">
+                        <Activity className="h-5 w-5" />
+                        أنشطة اليوم
+                      </h4>
+
+                      <div className="flex flex-wrap gap-2">
+                        {selectedReport.activities.map((activity, i) => (
                           <Badge
-                            className={`rounded-full ${getNapQualityColor(selectedReport.nap.quality)}`}
+                            key={i}
+                            className="bg-background text-foreground border border-border rounded-full px-3 py-1"
                           >
-                            {selectedReport.nap.quality}
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <Separator />
-                  <div>
-                    <h4 className="font-semibold flex items-center gap-2 mb-3">
-                      <Activity className="h-4 w-4 text-primary" />
-                      الأنشطة
-                    </h4>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedReport.activities && selectedReport.activities.length > 0 ? (
-                        selectedReport.activities.map((activity, index) => (
-                          <Badge
-                            key={index}
-                            variant="outline"
-                            className="rounded-full px-4 py-2 bg-mint/50 border-mint"
-                          >
+                            <Activity className="h-3 w-3 ml-1" />
                             {activity}
                           </Badge>
-                        ))
-                      ) : (
-                        <p className="text-muted-foreground">لا توجد أنشطة مسجلة</p>
-                      )}
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                  <Separator />
-                  <div>
-                    <h4 className="font-semibold flex items-center gap-2 mb-3">
-                      <MessageCircle className="h-4 w-4 text-primary" />
-                      ملاحظات المعلمة
-                    </h4>
-                    <div className="space-y-3">
-                      <div className="p-4 rounded-xl bg-peach">
-                        <p className="text-sm font-medium text-peach-foreground mb-1">
+                    <Separator />
+
+                    {/* Sleep */}
+                      <div className="p-4 rounded-xl bg-secondary/20">
+                        <h4 className="font-semibold flex items-center gap-2 mb-3 text-primary">
+                          <Moon className="h-5 w-5" />
+                          جودة النوم
+                        </h4>
+
+                        <div className="flex items-center gap-3">
+                          <Badge
+                            className={`rounded-full px-3 py-1 ${getSleepColor(
+                              selectedReport.sleep.quality
+                            )}`}
+                          >
+                            <Moon className="h-3 w-3 ml-1" />
+                            {getSleepLabel(selectedReport.sleep.quality)}
+                          </Badge>
+                        </div>
+
+                        {selectedReport.sleep.note && (
+                          <div className="mt-3 p-3 rounded-lg bg-background text-sm text-muted-foreground">
+                            <MessageCircle className="h-3 w-3 inline ml-1" />
+                            {selectedReport.sleep.note}
+                          </div>
+                        )}
+                      </div>
+
+
+                    <Separator />
+
+                    {/* Behavior */}
+                      <div className="p-4 rounded-xl bg-secondary/20">
+                        <h4 className="font-semibold flex items-center gap-2 mb-3 text-primary">
+                          <Activity className="h-5 w-5" />
                           السلوك
+                        </h4>
+
+                        <p className="text-sm font-medium text-foreground">
+                          <Activity className="h-3 w-3 inline ml-1" />
+                          المزاج: {selectedReport.behavior.mood}
                         </p>
-                        <p className="text-foreground">
-                          {selectedReport.behavior_notes || 'لا توجد ملاحظات سلوكية'}
-                        </p>
+
+                        {selectedReport.behavior.notes && (
+                          <p className="text-sm mt-2 text-muted-foreground">
+                            <MessageCircle className="h-3 w-3 inline ml-1" />
+                            {selectedReport.behavior.notes}
+                          </p>
+                        )}
                       </div>
-                      <div className="p-4 rounded-xl bg-sky">
-                        <p className="text-sm font-medium text-sky-foreground mb-1">
-                          ملاحظات عامة
-                        </p>
-                        <p className="text-foreground">
-                          {selectedReport.teacher_notes || 'لا توجد ملاحظات عامة'}
-                        </p>
-                      </div>
-                    </div>
+
+
+                    {/* General Notes */}
+                      {selectedReport.generalNotes && (
+                        <div className="p-4 rounded-xl bg-secondary/20">
+                          <h4 className="font-semibold flex items-center gap-2 mb-2 text-primary">
+                            <MessageCircle className="h-5 w-5" />
+                            ملاحظات المعلمة
+                          </h4>
+
+                          <p className="text-foreground leading-relaxed">
+                            <MessageCircle className="h-3 w-3 inline ml-1" />
+                            {selectedReport.generalNotes}
+                          </p>
+                        </div>
+                      )}
+
                   </div>
-                </div>
-              </ScrollArea>
+                </ScrollArea>
+              </>
             )}
           </DialogContent>
         </Dialog>
+
+        {hasMore && (
+          <div className="flex justify-center">
+            <Button onClick={() => fetchDailyReports(currentPage + 1, true)}>
+              تحميل المزيد
+            </Button>
+          </div>
+        )}
       </div>
     </ParentLayout>
   );

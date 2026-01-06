@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/auth.context';
+import toast from 'react-hot-toast';
 
 // Mock notifications count - in a real app, this would come from an API
 const unreadNotifications = 3;
@@ -32,6 +33,9 @@ export function ParentNavbar() {
       onSuccess: () => {
         navigate('/login');
       },
+      onError : () => {
+        toast.error("فشل تسجيل الخروج")
+      }
     });
   };
 
@@ -104,16 +108,6 @@ export function ParentNavbar() {
                   </p>
                 </div>
               </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => navigate('/child-profile')}>
-                👶 ملف الطفل
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate('/notifications')}>
-                🔔 الإشعارات
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate('/payments')}>
-                💳 المدفوعات
-              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleLogout} className="text-destructive">
                 🚪 تسجيل الخروج

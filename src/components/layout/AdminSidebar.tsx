@@ -4,10 +4,7 @@ import {
   Users,
   GraduationCap,
   Building2,
-  FileBarChart,
   CreditCard,
-  Megaphone,
-  Settings,
   Shield,
   Globe,
 } from 'lucide-react';
@@ -33,15 +30,10 @@ const mainNavItems = [
 ];
 
 const managementItems = [
-  { title: 'التقارير', url: '/admin/reports', icon: FileBarChart },
   { title: 'المدفوعات', url: '/admin/payments', icon: CreditCard },
-  { title: 'الإعلانات', url: '/admin/announcements', icon: Megaphone },
   { title: 'الموقع', url: '/admin/website', icon: Globe },
 ];
 
-const settingsItems = [
-  { title: 'الإعدادات', url: '/admin/settings', icon: Settings },
-];
 
 const AdminSidebar = () => {
   const location = useLocation();
@@ -125,32 +117,6 @@ const AdminSidebar = () => {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <SidebarGroup className="mt-4">
-          <SidebarGroupLabel className="text-admin-muted-foreground text-xs font-semibold uppercase tracking-wider px-3 mb-2">
-            النظام
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {settingsItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    asChild
-                    className={`transition-all duration-200 ${
-                      isActive(item.url)
-                        ? 'bg-admin text-admin-foreground shadow-md'
-                        : 'text-admin-sidebar-foreground hover:bg-admin-accent hover:text-admin-accent-foreground'
-                    }`}
-                  >
-                    <NavLink to={item.url}>
-                      <item.icon className="w-4 h-4" />
-                      <span className="font-medium">{item.title}</span>
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
       </SidebarContent>
 
       <SidebarFooter className="p-4 border-t border-admin-accent/50">

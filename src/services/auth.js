@@ -44,7 +44,7 @@ export const Logout = async ({ onStart, onSuccess, onError, onFinal } = {}) => {
   }
 
   return api.request(
-    '/logout',
+    '/auth/logout',
     {
       onStart,
       onSuccess: (data) => {

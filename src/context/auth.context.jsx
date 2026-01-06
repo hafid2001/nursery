@@ -60,7 +60,9 @@ export const AuthProvider = ({ children }) => {
         if (callbacks.onSuccess) callbacks.onSuccess(data);
       },
       onError: callbacks.onError,
-      onFinal: callbacks.onFinal,
+      onFinal:  () => {
+        setLoading(false)
+      },
     });
   };
 

@@ -13,26 +13,26 @@ import ChildProfile from './pages/parent/ChildProfile';
 import DailyReports from './pages/parent/DailyReports';
 import ProgressReports from './pages/parent/ProgressReports';
 import Attendance from './pages/parent/Attendance';
-import Documents from './pages/parent/Documents';
 import Payments from './pages/parent/Payments';
 import NotFound from './pages/parent/NotFound';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminUsers from './pages/admin/AdminUsers';
 import AdminTeachers from './pages/admin/AdminTeachers';
 import AdminClassrooms from './pages/admin/AdminClassrooms';
-import AdminReports from './pages/admin/AdminReports';
 import AdminPayments from './pages/admin/AdminPayments';
-import AdminAnnouncements from './pages/admin/AdminAnnouncements';
-import AdminSettings from './pages/admin/AdminSettings';
 import ParentRegistration from './pages/Registration/ParentRegistration';
 import LoginPage from './pages/Registration/LoginPage';
 import { AuthProvider } from './context/auth.context';
 import RoleBasedRoute from './pages/Registration/RoleBasedRoute';
 import { Toaster } from 'react-hot-toast';
 import CompletePayment from './pages/Registration/CheckOut';
-import PaymentSuccessGuard from './pages/Registration/PaymentSuccessGuard';
-import PaymentSuccess from './pages/Registration/PaymentSuccess';
+import PaymentSuccessGuard from './pages/payment/PaymentSuccessGuard';
+import PaymentSuccess from './pages/payment/PaymentSuccess';
 import PublicWebsite from './pages/PublicWebsite';
+import TeacherClassroom from './pages/teacher/TeacherClassroom';
+import TeacherDailyReports from './pages/teacher/TeacherDailyReports';
+import TeacherAttendance from './pages/teacher/TeacherAttendance';
+import TeacherProgressReports from './pages/teacher/TeacherProgressReports';
 
 
 const queryClient = new QueryClient();
@@ -90,14 +90,7 @@ const App = () => (
                 </RoleBasedRoute>
               }
             />
-            <Route
-              path="/parent/documents"
-              element={
-                <RoleBasedRoute allowedRoles={['parent']}>
-                  <Documents />
-                </RoleBasedRoute>
-              }
-            />
+
             <Route
               path="/parent/payments"
               element={
@@ -175,34 +168,10 @@ const App = () => (
               }
             />
             <Route
-              path="/admin/reports"
-              element={
-                <RoleBasedRoute allowedRoles={['admin']}>
-                  <AdminReports />
-                </RoleBasedRoute>
-              }
-            />
-            <Route
               path="/admin/payments"
               element={
                 <RoleBasedRoute allowedRoles={['admin']}>
                   <AdminPayments />
-                </RoleBasedRoute>
-              }
-            />
-            <Route
-              path="/admin/announcements"
-              element={
-                <RoleBasedRoute allowedRoles={['admin']}>
-                  <AdminAnnouncements />
-                </RoleBasedRoute>
-              }
-            />
-            <Route
-              path="/admin/settings"
-              element={
-                <RoleBasedRoute allowedRoles={['admin']}>
-                  <AdminSettings />
                 </RoleBasedRoute>
               }
             />
