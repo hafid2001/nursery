@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import AdminLayout from '@/components/layout/AdminLayout';
+import AdminLayout from '@/components/layout/AdminLayout.jsx';
 // Using the new service names we discussed
 import { getParentsSubscriptions, getAdminRevenueStats } from '@/services/admin'; 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import AdminLayout from '@/components/layout/AdminLayout';
+import AdminLayout from '@/components/layout/AdminLayout.jsx';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import ClassroomStats from '@/components/classroom/ClassroomStats';
@@ -76,6 +76,8 @@ const AdminClassrooms = () => {
             <Plus className="w-4 h-4 ml-2" /> إضافة فصل
           </Button>
         </div>
+
+
 
         <ClassroomStats />
 

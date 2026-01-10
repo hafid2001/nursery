@@ -153,14 +153,7 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        {/* Quick Actions (Static) */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <ActionBtn icon={FileText} label="التقارير" path="/daily-reports" />
-          <ActionBtn icon={Calendar} label="الحضور" path="/attendance" />
-          <ActionBtn icon={FileText} label="المستندات" path="/documents" />
-          <ActionBtn icon={TrendingUp} label="المدفوعات" path="/payments" />
-        </div>
-      </div>
+             </div>
     </ParentLayout>
   );
 }

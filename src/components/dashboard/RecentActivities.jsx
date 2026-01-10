@@ -45,9 +45,7 @@ const RecentActivities = () => {
         <CardTitle className="text-lg font-semibold">
           النشاط الأخير
         </CardTitle>
-        <Button variant="ghost" size="sm" className="text-admin" onClick={() => navigate("/admin/reports")}>
-          عرض الكل
-        </Button>
+       
       </CardHeader>
       <CardContent>
         {loading ? (

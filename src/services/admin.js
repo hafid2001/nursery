@@ -149,6 +149,29 @@ export const updateTeacher = async (
 };
 
 
+
+export const EditAdmin = async (
+  admin_id,
+  payload,
+  { onStart, onSuccess, onError, onFinal } = {}
+) => {
+  return api.request(
+    `/admin/${admin_id}`,
+    {
+      onStart,
+      onSuccess,
+      onError,
+      onFinal,
+    },
+    {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    }
+  );
+};
+
+
+
 export const getClassroomList = async (
   { onStart, onSuccess, onError, onFinal } = {}
 ) => {

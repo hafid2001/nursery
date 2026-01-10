@@ -36,9 +36,6 @@ const navigationItems = [
   { title: 'التقارير اليومية', url: '/parent/daily-reports', icon: FileText },
   { title: 'تقارير التقدم', url: '/parent/progress-reports', icon: TrendingUp },
   { title: 'الحضور', url: '/parent/attendance', icon: Calendar },
-  { title: 'المستندات', url: '/parent/documents', icon: FolderOpen },
-  { title: 'الإشعارات', url: '/parent/notifications', icon: Bell },
-  { title: 'المدفوعات', url: '/parent/payments', icon: CreditCard },
 ];
 
 export function ParentSidebar() {

@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import AdminLayout from '@/components/layout/AdminLayout';
+import AdminLayout from '@/components/layout/AdminLayout.jsx';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -140,6 +140,7 @@ const AdminUsers = () => {
       case 'APPROVED':
         approve(userId, {
           onSuccess: () => {
+            
             setUsers((prev) =>
               prev.map((u) =>
                 u.id === userId

@@ -39,7 +39,7 @@ const AdminSidebar = () => {
   const location = useLocation();
   const currentPath = location.pathname;
 
-  const isActive = (path: string) => {
+  const isActive = (path) => {
     if (path === '/admin') {
       return currentPath === '/admin';
     }

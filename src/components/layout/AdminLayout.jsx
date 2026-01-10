@@ -2,11 +2,9 @@ import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import AdminSidebar from './AdminSidebar';
 import AdminNavbar from './AdminNavbar';
 
-interface AdminLayoutProps {
-  children: React.ReactNode;
-}
 
-const AdminLayout = ({ children }: AdminLayoutProps) => {
+
+const AdminLayout = ({ children }) => {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-admin-muted/30">

@@ -66,7 +66,24 @@ export const TeacherWithClassroomSchema = TeacherBaseSchema.extend({
 
 
 
-// Add to admin.schema.js
+export const EditAdminSchema = z.object({
+  full_name: z
+    .string()
+    .min(2, 'الاسم يجب أن يكون على الأقل حرفين')
+    .max(100, 'الاسم طويل جدًا').optional(),
+
+  email: z.string().email('البريد الإلكتروني غير صحيح').optional(),
+
+  phone: z
+    .string()
+    .min(10, 'رقم الهاتف قصير جدًا')
+    .max(15, 'رقم الهاتف طويل جدًا').optional(),
+});
+
+
+
+
+
 export const ClassroomSchema = z.object({
   name: z.string().min(2, 'اسم الفصل يجب أن يكون حرفين على الأقل'),
   age_group: z.string().min(1, 'يرجى اختيار الفئة العمرية'),

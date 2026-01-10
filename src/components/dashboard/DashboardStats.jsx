@@ -98,7 +98,7 @@ const DashboardStats = () => {
         </div>
       ) : (
         statsData.map((stat) => (
-          <Card key={stat.title} className="hover-lift cursor-pointer" onClick={() => navigate(stat.route)}>
+          <Card key={stat.title} className="hover-lift cursor-pointer">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>

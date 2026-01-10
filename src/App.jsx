@@ -33,8 +33,7 @@ import TeacherClassroom from './pages/teacher/TeacherClassroom';
 import TeacherDailyReports from './pages/teacher/TeacherDailyReports';
 import TeacherAttendance from './pages/teacher/TeacherAttendance';
 import TeacherProgressReports from './pages/teacher/TeacherProgressReports';
-
-
+import TeacherDashboard from './pages/teacher/TeacherDashboard';
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -100,7 +99,14 @@ const App = () => (
               }
             />
 
-
+            <Route 
+              path="/teacher/"
+              element={
+                <RoleBasedRoute allowedRoles={['teacher']}>
+                  <TeacherDashboard />
+                </RoleBasedRoute>
+              }
+            />
             <Route
               path="/teacher/classroom"
               element={
